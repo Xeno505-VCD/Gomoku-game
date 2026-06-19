@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+<title>五子棋 - Gomoku</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background-color: #2E1A0E;
+  display: flex; justify-content: center; align-items: center;
+  min-height: 100vh; font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+  overflow-x: hidden;
+}
+#app { display: flex; flex-direction: column; align-items: center; }
+#infoBar {
+  width: 100%; height: 40px; background-color: #3E2723; color: #FFECB3;
+  display: flex; align-items: center; justify-content: center; gap: 20px;
+  font-size: 13px; flex-shrink: 0; flex-wrap: wrap; padding: 0 10px;
+}
+#infoBar span { white-space: nowrap; }
+#gameCanvas { cursor: pointer; }
+#toolbar {
+  display: flex; gap: 8px; padding: 8px; justify-content: center; flex-wrap: wrap;
+}
+#toolbar button {
+  border: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: bold;
+  color: #fff; border-radius: 6px; padding: 8px 14px; transition: transform 0.1s, opacity 0.2s;
+}
+#toolbar button:hover:not(:disabled) { opacity: 0.9; transform: scale(1.02); }
+#toolbar button:active:not(:disabled) { transform: scale(0.96); }
+#toolbar button:disabled { background-color: #9E9E9E !important; color: #616161 !important; cursor: not-allowed; opacity: 0.7; }
+.btn-red { background-color: #E53935; }
+.btn-orange { background-color: #FB8C00; }
+.btn-blue { background-color: #1E88E5; }
+#modeSelect {
+  display: flex; gap: 12px; align-items: center; padding: 10px;
+  color: #FFECB3; font-size: 14px;
+}
+#modeSelect label { cursor: pointer; }
+#modeSelect select {
+  padding: 4px 8px; border-radius: 4px; background: #5D4037; color: #FFECB3;
+  border: 1px solid #8D6E63; font-size: 13px;
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="infoBar">
+    <span>当前执棋：<strong id="currentTurn">黑棋</strong></span>
+    <span>|</span>
+    <span id="gameStatus">对局中</span>
+    <span>|</span>
+    <span id="aiHint"></span>
+  </div>
+  <canvas id="gameCanvas"></canvas>
+  <div id="modeSelect">
+    <label><input type="radio" name="mode" value="pvp" id="modePvp"> 双人对战</label>
+    <label><input type="radio" name="mode" value="ai" id="modeAi" checked> 人机对战</label>
+    <label>难度：<select id="aiLevel">
+      <option value="0">入门</option>
+      <option value="1">简单</option>
+      <option value="2" selected>普通</option>
+      <option value="3">困难</option>
+      <option value="4">大师</option>
+    </select></label>
+    <button class="btn-blue" onclick="restartGame()" style="padding:6px 12px;font-size:12px;">重新开局</button>
+  </div>
+  <div id="toolbar">
+    <button class="btn-red" id="btnSurrender" onclick="surrender()">认输</button>
+    <button class="btn-orange" id="btnDraw" onclick="requestDraw()">申请和棋</button>
+    <button class="btn-blue" id="btnUndo" onclick="requestUndo()">悔棋</button>
+  </div>
+</div>
+<script>
+// ========== 五子棋游戏 ==========
+const BOARD_SIZE = 15;
+const WIN_COUNT = 5;
+const EMPTY = 0, BLACK = 1, WHITE = 2;
+
+const STAR_POINTS = [
+  [3,3],[3,7],[3,11],[7,3],[7,7],[7,11],[11,3],[11,7],[11,11]
+];
+const CENTER = [7,7];
+
+// ===== 渲染常量 =====
+const BOARD_BG = '#DEB887';
+const BOARD_LINE = '#5D4037';
+const STONE_BLACK = '#1a1a1a';
+const STONE_BLACK_HL = '#555555';
+const STONE_WHITE = '#F5F5F5';
+const STONE_WHITE_BORDER = '#BDBDBD';
+const STONE_WHITE_HL = '#FFFFFF';
+const LAST_MARKER = '#FF5722';
+const WIN_HL = '#FFD700';
+
+// ===== 状态 =====
+let board = [];
+let currentPlayer = BLACK;
+let gameMode = 'ai'; // 'ai' | 'pvp'
+let aiLevel = 2;    // 0=入门 1=简单 2=普通 3=困难 4=大师
+let status = 'PLAYING'; // PLAYING | WIN | DRAW | AI_THINKING
+let lastMove = null;
+let winLine = [];
+let moveHistory = [];
+let undoUsed = false;
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// ===== 响应式布局 =====
+let W, H, boardX, boardY, cellSize, stoneR;
+function calcLayout() {
+  W = Math.min(window.innerWidth - 20, 900);
+  H = Math.min(window.innerHeight - 160, 650);
+  const usableW = W, usableH = H;
+  const boardAreaW = usableW * 0.78;
+  const maxBoard = Math.min(boardAreaW, usableH);
+  const padding = Math.max(maxBoard * 0.05, 10);
+  const boardSize = maxBoard - padding * 2;
+  cellSize = boardSize / 14;
+  stoneR = cellSize * 0.42;
+  boardX = (W - boardSize) / 2 - cellSize;
+  boardY = padding;
+}
+calcLayout();
+canvas.width = W;
+canvas.height = H;
+window.addEventListener('resize', () => { calcLayout(); canvas.width = W; canvas.height = H; draw(); });
+
+// ===== 简易AI：随机选已有棋子周边空位 =====
+function aiMove() {
+  // 收集已有棋子周边2格的所有空位
+  const nearby = new Set();
+  const key = (r, c) => r * 100 + c;
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      if (board[r][c] === EMPTY) continue;
+      for (let dr = -2; dr <= 2; dr++) {
+        for (let dc = -2; dc <= 2; dc++) {
+          const nr = r + dr, nc = c + dc;
+          if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && board[nr][nc] === EMPTY) {
+            nearby.add(key(nr, nc));
+          }
+        }
+      }
+    }
+  }
+
+  // 空棋盘：下天元
+  if (nearby.size === 0) return { r: 7, c: 7 };
+
+  // 随机选一个
+  const arr = Array.from(nearby).map(k => ({ r: Math.floor(k / 100), c: k % 100 }));
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// ===== TODO: AI性能优化 - 后续替换为棋型权重打分引擎 =====
+// 详见 src/ai/evaluator.ts 和 src/ai/ai-manager.ts
+// 当前使用极简随机策略保证快速响应
+
+// ===== 游戏逻辑 =====
+function initBoard() {
+  board = [];
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    board[r] = Array(BOARD_SIZE).fill(EMPTY);
+  }
+  currentPlayer = BLACK;
+  status = 'PLAYING';
+  lastMove = null;
+  winLine = [];
+  moveHistory = [];
+  undoUsed = false;
+  document.getElementById('gameStatus').textContent = '对局中';
+  document.getElementById('aiHint').textContent = '';
+  updateUI();
+  draw();
+  setButtonsEnabled(true);
+}
+
+function restartGame() {
+  gameMode = document.getElementById('modeAi').checked ? 'ai' : 'pvp';
+  aiLevel = parseInt(document.getElementById('aiLevel').value);
+  initBoard();
+}
+
+function placeStone(row, col) {
+  if (status !== 'PLAYING') return;
+  if (board[row][col] !== EMPTY) return;
+  board[row][col] = currentPlayer;
+  moveHistory.push({ row, col, color: currentPlayer });
+  lastMove = { row, col };
+
+  const result = checkWin(row, col);
+  if (result) {
+    status = 'WIN';
+    winLine = result.winLine;
+    setButtonsEnabled(false);
+    draw();
+    const winner = result.winner === BLACK ? '黑棋胜利！' : '白棋胜利！';
+    document.getElementById('gameStatus').textContent = winner;
+    return;
+  }
+  if (isBoardFull()) {
+    status = 'DRAW';
+    setButtonsEnabled(false);
+    draw();
+    document.getElementById('gameStatus').textContent = '对局和棋！棋盘已满';
+    return;
+  }
+  currentPlayer = currentPlayer === BLACK ? WHITE : BLACK;
+  updateUI();
+  draw();
+
+  // AI回合
+  if (gameMode === 'ai' && currentPlayer === WHITE && status === 'PLAYING') {
+    status = 'AI_THINKING';
+    document.getElementById('aiHint').textContent = 'AI思考中...';
+    setTimeout(() => {
+      if (status !== 'AI_THINKING') return;
+      const mv = aiMove();
+      if (mv) {
+        placeStone(mv.r !== undefined ? mv.r : mv.row, mv.c !== undefined ? mv.c : mv.col);
+      }
+    }, 50);
+  }
+}
+
+function checkWin(row, col) {
+  const color = board[row][col];
+  if (color === EMPTY) return null;
+  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+  for (const [dr, dc] of dirs) {
+    const line = [{ row, col }];
+    let r = row + dr, c = col + dc;
+    while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === color) {
+      line.push({ row: r, col: c }); r += dr; c += dc;
+    }
+    r = row - dr; c = col - dc;
+    while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === color) {
+      line.unshift({ row: r, col: c }); r -= dr; c -= dc;
+    }
+    if (line.length >= WIN_COUNT) return { winner: color, winLine: line };
+  }
+  return null;
+}
+
+function isBoardFull() {
+  for (let r = 0; r < BOARD_SIZE; r++)
+    for (let c = 0; c < BOARD_SIZE; c++)
+      if (board[r][c] === EMPTY) return false;
+  return true;
+}
+
+function surrender() {
+  if (status !== 'PLAYING' && status !== 'AI_THINKING') return;
+  status = 'DRAW';
+  setButtonsEnabled(false);
+  document.getElementById('gameStatus').textContent = currentPlayer === BLACK ? '黑棋认输，白棋胜！' : '白棋认输，黑棋胜！';
+  draw();
+}
+
+function requestDraw() {
+  if (status !== 'PLAYING' && status !== 'AI_THINKING') return;
+  if (gameMode === 'ai') {
+    // AI自动同意和棋
+    status = 'DRAW';
+    setButtonsEnabled(false);
+    document.getElementById('gameStatus').textContent = '对局和棋！';
+    draw();
+  } else {
+    // 本地双人模式：简化处理，直接确认
+    if (confirm('确定和棋？')) {
+      status = 'DRAW';
+      setButtonsEnabled(false);
+      document.getElementById('gameStatus').textContent = '对局和棋！';
+      draw();
+    }
+  }
+}
+
+function requestUndo() {
+  if (gameMode === 'ai') {
+    // 人机模式：撤回两步（玩家+AI）
+    if (moveHistory.length < (undoUsed ? 2 : 2)) return;
+    if (status !== 'PLAYING' && status !== 'AI_THINKING') return;
+    for (let i = 0; i < 2; i++) {
+      const step = moveHistory.pop();
+      if (step) board[step.row][step.col] = EMPTY;
+    }
+    undoUsed = true;
+    currentPlayer = BLACK;
+    lastMove = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null;
+    winLine = [];
+    status = 'PLAYING';
+    document.getElementById('gameStatus').textContent = '对局中';
+    updateUI();
+    draw();
+  } else {
+    // 本地双人：撤回一步
+    if (moveHistory.length < 1) return;
+    const step = moveHistory.pop();
+    board[step.row][step.col] = EMPTY;
+    currentPlayer = step.color;
+    lastMove = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null;
+    winLine = [];
+    status = 'PLAYING';
+    document.getElementById('gameStatus').textContent = '对局中';
+    updateUI();
+    draw();
+  }
+}
+
+function setButtonsEnabled(enabled) {
+  document.getElementById('btnSurrender').disabled = !enabled;
+  document.getElementById('btnDraw').disabled = !enabled;
+  document.getElementById('btnUndo').disabled = !enabled;
+}
+
+function updateUI() {
+  document.getElementById('currentTurn').textContent = currentPlayer === BLACK ? '黑棋' : '白棋';
+}
+
+// ===== Canvas 渲染 =====
+function getPX(col) { return boardX + col * cellSize; }
+function getPY(row) { return boardY + row * cellSize; }
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  const bps = cellSize * 14;
+  ctx.fillStyle = BOARD_BG;
+  ctx.fillRect(boardX - cellSize * 0.5, boardY - cellSize * 0.5, bps + cellSize, bps + cellSize);
+  ctx.strokeStyle = BOARD_LINE; ctx.lineWidth = 1;
+  for (let i = 0; i < BOARD_SIZE; i++) {
+    const x = getPX(i), y = getPY(i);
+    ctx.beginPath(); ctx.moveTo(getPX(0), y); ctx.lineTo(getPX(14), y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x, getPY(0)); ctx.lineTo(x, getPY(14)); ctx.stroke();
+  }
+  ctx.fillStyle = BOARD_LINE;
+  for (const [r, c] of STAR_POINTS) {
+    ctx.beginPath(); ctx.arc(getPX(c), getPY(r), Math.max(2, cellSize * 0.08), 0, Math.PI * 2); ctx.fill();
+  }
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      if (board[r][c] === EMPTY) continue;
+      drawStone(r, c, board[r][c]);
+    }
+  }
+  if (lastMove) {
+    ctx.fillStyle = LAST_MARKER;
+    ctx.beginPath(); ctx.arc(getPX(lastMove.col), getPY(lastMove.row), stoneR * 0.25, 0, Math.PI * 2); ctx.fill();
+  }
+  if (winLine.length > 0) {
+    ctx.save(); ctx.fillStyle = WIN_HL; ctx.globalAlpha = 0.5;
+    for (const p of winLine) {
+      ctx.beginPath(); ctx.arc(getPX(p.col), getPY(p.row), stoneR + 2, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+function drawStone(row, col, color) {
+  const x = getPX(col), y = getPY(row);
+  ctx.save();
+  if (color === BLACK) {
+    const g = ctx.createRadialGradient(x - stoneR * 0.3, y - stoneR * 0.3, stoneR * 0.1, x, y, stoneR);
+    g.addColorStop(0, STONE_BLACK_HL); g.addColorStop(1, STONE_BLACK); ctx.fillStyle = g;
+  } else {
+    const g = ctx.createRadialGradient(x - stoneR * 0.3, y - stoneR * 0.3, stoneR * 0.1, x, y, stoneR);
+    g.addColorStop(0, STONE_WHITE_HL); g.addColorStop(1, '#D6D6D6'); ctx.fillStyle = g;
+  }
+  ctx.beginPath(); ctx.arc(x, y, stoneR, 0, Math.PI * 2); ctx.fill();
+  if (color === WHITE) {
+    ctx.strokeStyle = STONE_WHITE_BORDER; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(x, y, stoneR, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+// ===== 输入处理 =====
+canvas.addEventListener('click', (e) => {
+  if (status !== 'PLAYING') return;
+  const rect = canvas.getBoundingClientRect();
+  const sx = canvas.width / rect.width, sy = canvas.height / rect.height;
+  const px = (e.clientX - rect.left) * sx, py = (e.clientY - rect.top) * sy;
+  const col = Math.round((px - boardX) / cellSize);
+  const row = Math.round((py - boardY) / cellSize);
+  if (row < 0 || row >= BOARD_SIZE || col < 0 || col >= BOARD_SIZE) return;
+  const hx = boardX + col * cellSize, hy = boardY + row * cellSize;
+  if (Math.sqrt((px - hx) ** 2 + (py - hy) ** 2) > cellSize * 0.45) return;
+  // 人机模式仅黑棋可操作
+  if (gameMode === 'ai' && currentPlayer !== BLACK) return;
+  placeStone(row, col);
+});
+
+canvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  if (status !== 'PLAYING') return;
+  if (e.touches.length > 1) return;
+  const t = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const sx = canvas.width / rect.width, sy = canvas.height / rect.height;
+  const px = (t.clientX - rect.left) * sx, py = (t.clientY - rect.top) * sy;
+  const col = Math.round((px - boardX) / cellSize);
+  const row = Math.round((py - boardY) / cellSize);
+  if (row < 0 || row >= BOARD_SIZE || col < 0 || col >= BOARD_SIZE) return;
+  const hx = boardX + col * cellSize, hy = boardY + row * cellSize;
+  if (Math.sqrt((px - hx) ** 2 + (py - hy) ** 2) > cellSize * 0.45) return;
+  if (gameMode === 'ai' && currentPlayer !== BLACK) return;
+  placeStone(row, col);
+}, { passive: false });
+
+// 模式切换
+document.getElementById('modeAi').addEventListener('change', () => { restartGame(); });
+document.getElementById('modePvp').addEventListener('change', () => { restartGame(); });
+document.getElementById('aiLevel').addEventListener('change', () => { restartGame(); });
+
+// 启动
+restartGame();
+</script>
+</body>
+</html>
