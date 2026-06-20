@@ -128,36 +128,97 @@ canvas.width = W;
 canvas.height = H;
 window.addEventListener('resize', () => { calcLayout(); canvas.width = W; canvas.height = H; draw(); });
 
-// ===== 简易AI：随机选已有棋子周边空位 =====
-function aiMove() {
-  // 收集已有棋子周边2格的所有空位
-  const nearby = new Set();
+// ===== AI难度配置 =====
+const AI_LEVELS = [
+  { mistakeRate: 0.70, attackW: 0.1, defenseW: 0.4 }, // 入门
+  { mistakeRate: 0.40, attackW: 0.3, defenseW: 0.6 }, // 简单
+  { mistakeRate: 0.15, attackW: 0.55, defenseW: 0.7 }, // 普通
+  { mistakeRate: 0.05, attackW: 0.75, defenseW: 0.8 }, // 困难
+  { mistakeRate: 0, attackW: 0.9, defenseW: 0.9 },      // 大师
+];
+
+// ===== 棋型权重打分引擎 =====
+function getNearbyCells(board, radius) {
+  const set = new Set();
   const key = (r, c) => r * 100 + c;
   for (let r = 0; r < BOARD_SIZE; r++) {
     for (let c = 0; c < BOARD_SIZE; c++) {
       if (board[r][c] === EMPTY) continue;
-      for (let dr = -2; dr <= 2; dr++) {
-        for (let dc = -2; dc <= 2; dc++) {
+      for (let dr = -radius; dr <= radius; dr++) {
+        for (let dc = -radius; dc <= radius; dc++) {
           const nr = r + dr, nc = c + dc;
           if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && board[nr][nc] === EMPTY) {
-            nearby.add(key(nr, nc));
+            set.add(key(nr, nc));
           }
         }
       }
     }
   }
-
-  // 空棋盘：下天元
-  if (nearby.size === 0) return { r: 7, c: 7 };
-
-  // 随机选一个
-  const arr = Array.from(nearby).map(k => ({ r: Math.floor(k / 100), c: k % 100 }));
-  return arr[Math.floor(Math.random() * arr.length)];
+  // 空棋盘：只评估天元和星位
+  if (set.size === 0) {
+    return [{ r: 7, c: 7 }, { r: 3, c: 3 }, { r: 3, c: 7 }, { r: 3, c: 11 },
+            { r: 7, c: 3 }, { r: 7, c: 11 }, { r: 11, c: 3 }, { r: 11, c: 7 }, { r: 11, c: 11 }];
+  }
+  return Array.from(set).map(k => ({ r: Math.floor(k / 100), c: k % 100 }));
 }
 
-// ===== TODO: AI性能优化 - 后续替换为棋型权重打分引擎 =====
-// 详见 src/ai/evaluator.ts 和 src/ai/ai-manager.ts
-// 当前使用极简随机策略保证快速响应
+function evalLine(board, row, col, dr, dc, color) {
+  let count = 1, openEnds = 0;
+  let r = row + dr, c = col + dc;
+  while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === color) { count++; r += dr; c += dc; }
+  if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === EMPTY) openEnds++;
+  r = row - dr; c = col - dc;
+  while (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === color) { count++; r -= dr; c -= dc; }
+  if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === EMPTY) openEnds++;
+  return scoreShape(count, openEnds);
+}
+
+function scoreShape(count, openEnds) {
+  if (count >= 5) return 100000;
+  if (count === 4) return openEnds === 2 ? 50000 : openEnds === 1 ? 5000 : 0;
+  if (count === 3) return openEnds === 2 ? 3000 : openEnds === 1 ? 500 : 0;
+  if (count === 2) return openEnds === 2 ? 200 : openEnds === 1 ? 50 : 0;
+  if (count === 1 && openEnds === 2) return 10;
+  return 0;
+}
+
+function evalPoint(board, row, col, color) {
+  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+  let total = 0;
+  for (const [dr, dc] of dirs) total += evalLine(board, row, col, dr, dc, color);
+  return total;
+}
+
+function aiMove() {
+  const cfg = AI_LEVELS[aiLevel];
+  const aiColor = WHITE;
+  const cells = getNearbyCells(board, 2);
+  const scores = [];
+
+  // 空棋盘：下天元
+  if (cells.length === 0) return { r: 7, c: 7 };
+
+  for (const { r, c } of cells) {
+    const atk = evalPoint(board, r, c, aiColor);
+    const def = evalPoint(board, r, c, BLACK);
+    scores.push({ r, c, score: atk * cfg.attackW + def * cfg.defenseW });
+  }
+
+  // 按分数降序排列
+  scores.sort((a, b) => b.score - a.score);
+  if (scores.length === 0) return { r: 7, c: 7 };
+
+  // 根据失误概率随机选择非最优解
+  if (cfg.mistakeRate > 0 && Math.random() < cfg.mistakeRate) {
+    const start = Math.max(1, Math.floor(scores.length * 0.2));
+    const pool = scores.slice(start);
+    if (pool.length > 0) {
+      return pool[Math.floor(Math.random() * Math.min(pool.length, Math.max(1, Math.floor(pool.length * 0.4))))];
+    }
+  }
+
+  return scores[0];
+}
 
 // ===== 游戏逻辑 =====
 function initBoard() {
