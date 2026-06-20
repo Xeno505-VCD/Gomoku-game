@@ -67,14 +67,16 @@ body {
       <option value="3">困难</option>
       <option value="4">大师</option>
     </select>
-    <button class="btn-blue" onclick
+    <button class="btn-blue" onclick="restartGame()">重新开局</button>
+    <div style="font-weight:bold;margin-top:8px;">操作</div>
+    <button class="btn-red" id="btnSurrender" onclick="surrender()">认输</button>
     <button class="btn-orange" id="btnDraw" onclick="requestDraw()">申请和棋</button>
     <button class="btn-blue" id="btnUndo" onclick="requestUndo()">悔棋</button>
+    <div id="statsBar"></div>
   </div>
-  <div id="statsBar" style="color:#FFECB3;font-size:12px;padding:6px;text-align:center;"></div>
+</div>
 </div>
 <script>
-// ========== 五子棋游戏 ==========
 const BOARD_SIZE = 15;
 const WIN_COUNT = 5;
 const EMPTY = 0, BLACK = 1, WHITE = 2;
