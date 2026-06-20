@@ -12,36 +12,36 @@ body {
   min-height: 100vh; font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
   overflow-x: hidden;
 }
-#app { display: flex; flex-direction: column; align-items: center; }
 #infoBar {
   width: 100%; height: 40px; background-color: #3E2723; color: #FFECB3;
   display: flex; align-items: center; justify-content: center; gap: 20px;
   font-size: 13px; flex-shrink: 0; flex-wrap: wrap; padding: 0 10px;
 }
 #infoBar span { white-space: nowrap; }
-#gameCanvas { cursor: pointer; }
-#toolbar {
-  display: flex; gap: 8px; padding: 8px; justify-content: center; flex-wrap: wrap;
-}
-#toolbar button {
-  border: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: bold;
-  color: #fff; border-radius: 6px; padding: 8px 14px; transition: transform 0.1s, opacity 0.2s;
-}
-#toolbar button:hover:not(:disabled) { opacity: 0.9; transform: scale(1.02); }
-#toolbar button:active:not(:disabled) { transform: scale(0.96); }
-#toolbar button:disabled { background-color: #9E9E9E !important; color: #616161 !important; cursor: not-allowed; opacity: 0.7; }
+#gameCanvas { cursor: pointer; flex-shrink: 0; }
 .btn-red { background-color: #E53935; }
 .btn-orange { background-color: #FB8C00; }
 .btn-blue { background-color: #1E88E5; }
-#modeSelect {
-  display: flex; gap: 12px; align-items: center; padding: 10px;
-  color: #FFECB3; font-size: 14px;
+/* 主区：棋盘左 + 面板右 */
+#mainArea { display: flex; align-items: flex-start; justify-content: center; gap: 0; width: 100%; }
+#sidePanel {
+  display: flex; flex-direction: column; align-items: center; padding: 10px; gap: 12px;
+  color: #FFECB3; font-size: 14px; flex-shrink: 0; min-width: 140px;
 }
-#modeSelect label { cursor: pointer; }
-#modeSelect select {
+#sidePanel button {
+  border: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: bold;
+  color: #fff; border-radius: 6px; padding: 10px 0; transition: transform 0.1s, opacity 0.2s;
+  width: 120px; flex-shrink: 0;
+}
+#sidePanel button:hover:not(:disabled) { opacity: 0.9; transform: scale(1.02); }
+#sidePanel button:active:not(:disabled) { transform: scale(0.96); }
+#sidePanel button:disabled { background-color: #9E9E9E !important; color: #616161 !important; cursor: not-allowed; opacity: 0.7; }
+#sidePanel select {
   padding: 4px 8px; border-radius: 4px; background: #5D4037; color: #FFECB3;
-  border: 1px solid #8D6E63; font-size: 13px;
+  border: 1px solid #8D6E63; font-size: 13px; width: 120px;
 }
+#sidePanel label { cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 4px; }
+#statsBar { color: #FFECB3; font-size: 12px; text-align: center; line-height: 1.5; }
 </style>
 </head>
 <body>
@@ -53,25 +53,28 @@ body {
     <span>|</span>
     <span id="aiHint"></span>
   </div>
+<div id="mainArea">
   <canvas id="gameCanvas"></canvas>
-  <div id="modeSelect">
+  <div id="sidePanel">
+    <div style="font-weight:bold;margin-bottom:4px;">模式</div>
     <label><input type="radio" name="mode" value="pvp" id="modePvp"> 双人对战</label>
     <label><input type="radio" name="mode" value="ai" id="modeAi" checked> 人机对战</label>
-    <label>难度：<select id="aiLevel">
+    <div style="font-weight:bold;margin-top:4px;">难度</div>
+    <select id="aiLevel">
       <option value="0">入门</option>
       <option value="1">简单</option>
       <option value="2" selected>普通</option>
       <option value="3">困难</option>
       <option value="4">大师</option>
-    </select></label>
-    <button class="btn-blue" onclick="restartGame()" style="padding:6px 12px;font-size:12px;">重新开局</button>
-  </div>
-  <div id="toolbar">
+    </select>
+    <button class="btn-blue" onclick="restartGame()">重新开局</button>
+    <div style="font-weight:bold;margin-top:8px;">操作</div>
     <button class="btn-red" id="btnSurrender" onclick="surrender()">认输</button>
     <button class="btn-orange" id="btnDraw" onclick="requestDraw()">申请和棋</button>
     <button class="btn-blue" id="btnUndo" onclick="requestUndo()">悔棋</button>
+    <div id="statsBar"></div>
   </div>
-  <div id="statsBar" style="color:#FFECB3;font-size:12px;padding:6px;text-align:center;"></div>
+</div>
 </div>
 <script>
 // ========== 五子棋游戏 ==========
