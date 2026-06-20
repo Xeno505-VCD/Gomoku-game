@@ -71,6 +71,7 @@ body {
     <button class="btn-orange" id="btnDraw" onclick="requestDraw()">申请和棋</button>
     <button class="btn-blue" id="btnUndo" onclick="requestUndo()">悔棋</button>
   </div>
+  <div id="statsBar" style="color:#FFECB3;font-size:12px;padding:6px;text-align:center;"></div>
 </div>
 <script>
 // ========== 五子棋游戏 ==========
@@ -253,12 +254,13 @@ function placeStone(row, col) {
   lastMove = { row, col };
 
   const result = checkWin(row, col);
-  if (result) {
+    if (result) {
     status = 'WIN';
     winLine = result.winLine;
     setButtonsEnabled(false);
     draw();
     const winner = result.winner === BLACK ? '黑棋胜利！' : '白棋胜利！';
+    recordResult(result.winner === BLACK ? 'win' : 'loss');
     document.getElementById('gameStatus').textContent = winner;
     return;
   }
@@ -266,6 +268,7 @@ function placeStone(row, col) {
     status = 'DRAW';
     setButtonsEnabled(false);
     draw();
+    recordResult('draw');
     document.getElementById('gameStatus').textContent = '对局和棋！棋盘已满';
     return;
   }
@@ -317,6 +320,7 @@ function surrender() {
   if (status !== 'PLAYING' && status !== 'AI_THINKING') return;
   status = 'DRAW';
   setButtonsEnabled(false);
+  recordResult('loss');
   document.getElementById('gameStatus').textContent = currentPlayer === BLACK ? '黑棋认输，白棋胜！' : '白棋认输，黑棋胜！';
   draw();
 }
@@ -327,6 +331,7 @@ function requestDraw() {
     // AI自动同意和棋
     status = 'DRAW';
     setButtonsEnabled(false);
+    recordResult('draw');
     document.getElementById('gameStatus').textContent = '对局和棋！';
     draw();
   } else {
@@ -334,6 +339,7 @@ function requestDraw() {
     if (confirm('确定和棋？')) {
       status = 'DRAW';
       setButtonsEnabled(false);
+      recordResult('draw');
       document.getElementById('gameStatus').textContent = '对局和棋！';
       draw();
     }
@@ -381,6 +387,27 @@ function setButtonsEnabled(enabled) {
 function updateUI() {
   document.getElementById('currentTurn').textContent = currentPlayer === BLACK ? '黑棋' : '白棋';
 }
+
+// ===== 战绩统计 (localStorage) =====
+function loadStats() {
+  try { return JSON.parse(localStorage.getItem('gomoku_stats')) || { total:0, wins:0, losses:0, draws:0, streak:0, maxStreak:0 }; }
+  catch(e) { return { total:0, wins:0, losses:0, draws:0, streak:0, maxStreak:0 }; }
+}
+function saveStats(st) {
+  try { localStorage.setItem('gomoku_stats', JSON.stringify(st)); } catch(e) {}
+}
+function recordResult(type) {
+  const st = loadStats();
+  st.total++;
+  if (type === 'win')  { st.wins++; st.streak++; st.maxStreak = Math.max(st.maxStreak, st.streak); }
+  if (type === 'loss') { st.losses++; st.streak = 0; }
+  if (type === 'draw') { st.draws++; /* streak unchanged */ }
+  saveStats(st);
+  const el = document.getElementById('statsBar');
+  if (el) el.textContent = `总局:${st.total} 胜:${st.wins} 负:${st.losses} 和:${st.draws} | 连胜:${st.streak}(${st.maxStreak}场最佳)`;
+}
+// 页面加载时显示
+(function(){ const st=loadStats(); const el=document.getElementById('statsBar'); if(el)el.textContent=`总局:${st.total} 胜:${st.wins} 负:${st.losses} 和:${st.draws} | 连胜:${st.streak}(${st.maxStreak}场最佳)`; })();
 
 // ===== Canvas 渲染 =====
 function getPX(col) { return boardX + col * cellSize; }
