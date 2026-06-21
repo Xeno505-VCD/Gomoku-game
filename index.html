@@ -18,7 +18,7 @@ body {
   font-size: 13px; flex-shrink: 0; flex-wrap: wrap; padding: 0 10px;
 }
 #infoBar span { white-space: nowrap; }
-#gameCanvas { cursor: pointer; flex-shrink: 0; }
+#gameCanvas { cursor: pointer; flex-shrink: 0; touch-action: manipulation; }
 .btn-red { background-color: #E53935; }
 .btn-orange { background-color: #FB8C00; }
 .btn-blue { background-color: #1E88E5; }
@@ -425,22 +425,7 @@ canvas.addEventListener('click', (e) => {
   placeStone(row, col);
 });
 
-canvas.addEventListener('touchstart', (e) => {
-  e.preventDefault();
-  if (status !== 'PLAYING') return;
-  if (e.touches.length > 1) return;
-  const t = e.touches[0];
-  const rect = canvas.getBoundingClientRect();
-  const sx = canvas.width / rect.width, sy = canvas.height / rect.height;
-  const px = (t.clientX - rect.left) * sx, py = (t.clientY - rect.top) * sy;
-  const col = Math.round((px - boardX) / cellSize);
-  const row = Math.round((py - boardY) / cellSize);
-  if (row < 0 || row >= BOARD_SIZE || col < 0 || col >= BOARD_SIZE) return;
-  const hx = boardX + col * cellSize, hy = boardY + row * cellSize;
-  if (Math.sqrt((px - hx) ** 2 + (py - hy) ** 2) > cellSize * 0.45) return;
-  if (gameMode === 'ai' && currentPlayer !== BLACK) return;
-  placeStone(row, col);
-}, { passive: false });
+// 手机端使用 click 事件（touch-action: manipulation 消除300ms延迟）
 
 // ===== 联机模式 WebSocket =====
 let ws = null;
@@ -560,6 +545,10 @@ function connectWS(room) {
     }
   };
   ws.onclose = () => { document.getElementById('aiHint').textContent = '连接已断开'; };
+  // 心跳保活：每 30 秒发 ping 防止 Cloudflare 超时断开
+  const pingInterval = setInterval(() => { if (ws && ws.readyState === WebSocket.OPEN) ws.send('ping'); }, 30000);
+  const origClose = ws.close.bind(ws);
+  ws.close = function() { clearInterval(pingInterval); origClose(); };
 }
 
 // 覆写联机模式的落子（仅发消息，不本地更新棋盘——由服务端MOVE广播统一）
