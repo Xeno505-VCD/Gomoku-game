@@ -1,8 +1,7 @@
 import http from 'http';
 import { WebSocketServer } from 'ws';
-import nodemailer from 'nodemailer';
 
-const server = http.createServer(async (req, res) => {
+const server = http.createServer((req, res) => {
   // CORS 预检
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
@@ -16,11 +15,11 @@ const server = http.createServer(async (req, res) => {
 
   res.setHeader('Access-Control-Allow-Origin', '*');
 
-  // 反馈端点
+  // 反馈端点（仅记录到控制台日志，不发送邮件，保护隐私）
   if (req.method === 'POST' && req.url === '/api/feedback') {
     let body = '';
     req.on('data', chunk => body += chunk);
-    req.on('end', async () => {
+    req.on('end', () => {
       try {
         const { message } = JSON.parse(body);
         if (!message) {
@@ -28,33 +27,12 @@ const server = http.createServer(async (req, res) => {
           res.end(JSON.stringify({ error: '消息不能为空' }));
           return;
         }
-        // 通过 Gmail SMTP 发送到管理员邮箱
-        const transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: 'xinshangsun714@gmail.com',
-            pass: process.env.GMAIL_APP_PASSWORD || '',
-          },
-        });
-        if (!process.env.GMAIL_APP_PASSWORD) {
-          // 如果没有配置密码，仅记录到控制台
-          console.log('[反馈]', new Date().toISOString(), message);
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ ok: true, note: 'logged to console' }));
-          return;
-        }
-        await transporter.sendMail({
-          from: 'xinshangsun714@gmail.com',
-          to: 'xinshangsun714@gmail.com',
-          subject: '🏠 五子棋反馈',
-          text: `来自五子棋页面的反馈：\n\n${message}\n\n时间：${new Date().toISOString()}`,
-        });
+        console.log('[反馈]', new Date().toISOString(), message);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true }));
-      } catch (e) {
-        console.error('反馈发送失败:', e.message);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: '发送失败' }));
+      } catch {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: '格式错误' }));
       }
     });
     return;
