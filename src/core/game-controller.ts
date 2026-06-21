@@ -65,8 +65,11 @@ export class GameController {
       return { action: 'DRAW' };
     }
 
-    // 切换执棋方
+    // 切换执棋方，并重置AI思考状态
     this.currentPlayer = this.currentPlayer === ChessColor.BLACK ? ChessColor.WHITE : ChessColor.BLACK;
+    if (this.status === GameStatus.AI_THINKING) {
+      this.status = GameStatus.PLAYING;
+    }
     return { action: 'MOVE' };
   }
 
