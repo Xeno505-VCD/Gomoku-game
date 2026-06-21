@@ -22,8 +22,18 @@ body {
 .btn-red { background-color: #E53935; }
 .btn-orange { background-color: #FB8C00; }
 .btn-blue { background-color: #1E88E5; }
-/* 主区：棋盘左 + 面板右 */
+/* 主区：棋盘左 + 面板右（PC） */
 #mainArea { display: flex; align-items: flex-start; justify-content: center; gap: 0; width: 100%; }
+/* 手机端：棋盘上 + 面板下 */
+@media (max-width: 600px) {
+  #mainArea { flex-direction: column; align-items: center; }
+  #sidePanel { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 6px; min-width: auto; padding: 6px; }
+  #sidePanel button { width: 80px; font-size: 11px; padding: 6px 0; }
+  #sidePanel select { width: 80px; font-size: 11px; }
+  #sidePanel label { font-size: 11px; }
+  #sidePanel > div { width: 100%; text-align: center; }
+  #onlinePanel { flex-direction: row !important; flex-wrap: wrap; justify-content: center; width: 100% !important; }
+}
 #sidePanel {
   display: flex; flex-direction: column; align-items: center; padding: 10px; gap: 12px;
   color: #FFECB3; font-size: 14px; flex-shrink: 0; min-width: 140px;
@@ -123,10 +133,11 @@ const ctx = canvas.getContext('2d');
 // ===== 响应式布局 =====
 let W, H, boardX, boardY, cellSize, stoneR;
 function calcLayout() {
+  const isMobile = window.innerWidth <= 600;
   W = Math.min(window.innerWidth - 20, 900);
   H = Math.min(window.innerHeight - 160, 650);
   const usableW = W, usableH = H;
-  const boardAreaW = usableW * 0.78;
+  const boardAreaW = usableW * (isMobile ? 0.95 : 0.78);
   const maxBoard = Math.min(boardAreaW, usableH);
   const padding = Math.max(maxBoard * 0.05, 10);
   const boardSize = maxBoard - padding * 2;
@@ -495,14 +506,17 @@ function connectWS(room) {
       case 'WAITING':
         document.getElementById('aiHint').textContent = msg.msg;
         break;
-      case 'GAME_START':
-        document.getElementById('aiHint').textContent = '对局开始！';
+    case 'GAME_START':
         initBoard();
-        currentPlayer = BLACK;
+        board = msg.board || board;
+        currentPlayer = msg.currentPlayer || BLACK;
         updateUI();
+        document.getElementById('aiHint').textContent = `你执${myColor===1?'黑':'白'}棋`;
+        draw();
         break;
-      case 'MOVE':
-        board[msg.row][msg.col] = msg.color;
+    case 'MOVE':
+        if (msg.board) board = msg.board;
+        else board[msg.row][msg.col] = msg.color;
         lastMove = { row: msg.row, col: msg.col };
         currentPlayer = msg.currentPlayer;
         updateUI();
@@ -554,7 +568,7 @@ function connectWS(room) {
   ws.onclose = () => { document.getElementById('aiHint').textContent = '连接已断开'; };
 }
 
-// 覆写联机模式的落子
+// 覆写联机模式的落子（仅发消息，不本地更新棋盘——由服务端MOVE广播统一）
 const origPlaceStone = placeStone;
 placeStone = function(row, col) {
   if (gameMode === 'online') {
@@ -563,13 +577,7 @@ placeStone = function(row, col) {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: 'MOVE', row, col }));
     }
-    board[row][col] = currentPlayer;
-    moveHistory.push({ row, col, color: currentPlayer });
-    lastMove = { row, col };
-    currentPlayer = currentPlayer === BLACK ? WHITE : BLACK;
-    updateUI();
-    draw();
-    return;
+    return; // 等服务端 MOVE 广播来真正落子
   }
   return origPlaceStone(row, col);
 };
