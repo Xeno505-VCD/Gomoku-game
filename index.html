@@ -125,12 +125,13 @@ function calcLayout() {
   W = Math.min(window.innerWidth - 20, 900);
   H = Math.min(window.innerHeight - 160, isMobile ? 650 : 650);
   const usableW = W, usableH = H;
-  const boardAreaW = usableW * (isMobile ? 0.95 : 0.78);
+  const boardAreaW = isMobile ? usableW : usableW * 0.78;
   const maxBoard = Math.min(boardAreaW, usableH);
   const padding = Math.max(maxBoard * 0.05, 8);
   const boardSize = maxBoard - padding * 2;
   cellSize = boardSize / 14;
   stoneR = cellSize * 0.42;
+  // 移动端棋盘完全水平居中
   boardX = (W - boardSize) / 2 - cellSize;
   boardY = padding;
 }
