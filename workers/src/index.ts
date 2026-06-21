@@ -15,15 +15,11 @@ function checkWin(board,row,col,color){
 export default {
   async fetch(request){
     var url=new URL(request.url);
-    if(url.pathname==='/create'){
-      var roomId=String(Math.floor(1000+Math.random()*9000));
-      rooms[roomId]={players:[],board:initBoard(),currentPlayer:1,moves:[],status:'PLAYING'};
-      return new Response(JSON.stringify({roomId:roomId}),{headers:{'Content-Type':'application/json','Access-Control-Allow-Origin':'*'}});
-    }
     if(url.pathname==='/join'){
       var roomId=url.searchParams.get('room')||'0000';
       var room=rooms[roomId];
-      if(!room)return new Response('Room not found',{status:404});
+      // 房间不存在则自动创建（第一人）
+      if(!room){ room={players:[],board:initBoard(),currentPlayer:1,moves:[],status:'PLAYING'}; rooms[roomId]=room; }
       var pair=new WebSocketPair();var client=pair[0],server=pair[1];server.accept();
       var color=room.players.length===0?1:2;
       var player={color:color,ws:server};room.players.push(player);

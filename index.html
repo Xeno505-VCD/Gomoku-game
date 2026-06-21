@@ -471,16 +471,10 @@ document.getElementById('modePvp').addEventListener('change', () => {
 });
 document.getElementById('aiLevel').addEventListener('change', () => { restartGame(); });
 
-async function createRoom() {
-  try {
-    const res = await fetch(WS_URL + '/create');
-    const data = await res.json();
-    onlineRoom = data.roomId;
-    connectWS(onlineRoom);
-    document.getElementById('roomInfo').textContent = '房间号: ' + onlineRoom;
-  } catch(e) {
-    document.getElementById('roomInfo').textContent = '创建失败，检查网络';
-  }
+function createRoom() {
+  onlineRoom = String(Math.floor(1000 + Math.random() * 9000));
+  connectWS(onlineRoom);
+  document.getElementById('roomInfo').textContent = '房间号: ' + onlineRoom;
 }
 
 function joinRoom() {
