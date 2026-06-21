@@ -172,7 +172,9 @@ function initBoard() {
 }
 
 function restartGame() {
-  gameMode = document.getElementById('modeAi').checked ? 'ai' : 'pvp';
+  if (document.getElementById('modeAi').checked) gameMode = 'ai';
+  else if (document.getElementById('modePvp').checked) gameMode = 'pvp';
+  else if (document.getElementById('modeOnline').checked) gameMode = 'online';
   aiLevel = parseInt(document.getElementById('aiLevel').value);
   initBoard();
 }
@@ -433,7 +435,7 @@ canvas.addEventListener('touchstart', (e) => {
 let ws = null;
 let onlineRoom = '';
 let myColor = 0;
-const WS_URL = 'https://gomoku-ws.YOUR_SUBDOMAIN.workers.dev'; // 部署后替换
+const WS_URL = 'https://gomoku-ws.xinshangsun714.workers.dev';
 
 document.getElementById('modeOnline').addEventListener('change', () => {
   gameMode = 'online';
