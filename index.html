@@ -125,13 +125,12 @@ function calcLayout() {
   W = Math.min(window.innerWidth - 20, 900);
   H = Math.min(window.innerHeight - 160, isMobile ? 650 : 650);
   const usableW = W, usableH = H;
-  const boardAreaW = isMobile ? usableW : usableW * 0.78;
+  const boardAreaW = usableW * (isMobile ? 0.95 : 0.78);
   const maxBoard = Math.min(boardAreaW, usableH);
   const padding = Math.max(maxBoard * 0.05, 8);
   const boardSize = maxBoard - padding * 2;
   cellSize = boardSize / 14;
   stoneR = cellSize * 0.42;
-  // 移动端棋盘完全水平居中
   boardX = (W - boardSize) / 2 - cellSize;
   boardY = padding;
 }
@@ -366,7 +365,7 @@ canvas.addEventListener('touchstart', (e) => {
 // 联机 WebSocket
 let ws = null, onlineRoom = '', myColor = 0;
 let myLastMove = null; // 记录自己刚下的位置，防止 MOVE 广播重复绘制
-const WS_URL = 'https://gomoku-ws.xinshangsun714.workers.dev';
+const WS_URL = 'https://gomoku-game-m1ls.onrender.com';
 
 document.getElementById('modeOnline').addEventListener('change', () => {
   gameMode = 'online';
