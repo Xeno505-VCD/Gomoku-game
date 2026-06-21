@@ -288,19 +288,74 @@ body {
 
 /* ==================== 手机端 ==================== */
 @media (max-width: 600px) {
-  #mainArea {
-    flex-direction: column;
-    align-items: center;
+  html, body {
+    height: 100%;
+    overflow: hidden;
   }
 
-  #sidePanel {
+  body {
+    display: flex;
+    align-items: flex-start;
+  }
+
+  #app {
+    height: 100%;
+    justify-content: flex-start;
+    gap: 0;
+  }
+
+  #infoBar {
+    flex-shrink: 0;
+    font-size: 11px;
+    gap: 6px;
+    height: 30px;
+    padding: 0 6px;
+  }
+
+  #rulesRow {
+    flex-shrink: 0;
+    font-size: 10px;
+    padding: 3px 10px;
+  }
+
+  #mainArea {
+    flex: 1;
+    display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    justify-content: flex-start;
+    gap: 4px;
+    overflow-y: auto;
+    width: 100%;
+    padding-bottom: 8px;
+  }
+
+  /* Canvas 正方形棋盘 + 投影 + 圆角 */
+  #gameCanvas {
+    display: block;
+    max-width: 92vw;
+    max-height: 55vh;
+    width: auto !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+    border-radius: 8px;
+    object-fit: contain;
+  }
+
+  /* 侧面板 */
+  #sidePanel {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
     min-width: auto;
-    padding: 6px 0;
+    padding: 4px 8px;
     margin-top: 0;
     width: 100%;
+    order: 1;
   }
 
   .panel-row {
@@ -308,11 +363,26 @@ body {
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     width: 100%;
-    padding: 0 8px;
+    padding: 0 4px;
   }
 
+  /* 战绩：棋盘上方 */
+  #rowStats {
+    order: -1;
+    background: rgba(62, 39, 35, 0.9);
+    border-radius: 6px;
+    padding: 3px 0;
+    margin: 0 8px;
+  }
+
+  #statsBar {
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  /* 按钮尺寸 */
   #sidePanel button {
     width: 72px;
     font-size: 12px;
@@ -326,19 +396,6 @@ body {
 
   #btnMode {
     width: 72px !important;
-  }
-
-  /* 战绩行：棋盘下方第一眼 */
-  #rowStats {
-    order: -1;
-    background: rgba(62, 39, 35, 0.8);
-    border-radius: 6px;
-    padding: 4px 0;
-  }
-
-  #statsBar {
-    font-size: 12px;
-    font-weight: bold;
   }
 
   /* 联机面板 */
@@ -374,17 +431,6 @@ body {
     width: 56px !important;
     font-size: 11px;
     padding: 6px 0;
-  }
-
-  /* 信息栏 */
-  #infoBar {
-    font-size: 11px;
-    gap: 6px;
-    height: 32px;
-  }
-
-  #rulesRow {
-    font-size: 10px;
   }
 
   /* 弹窗 */

@@ -24,10 +24,8 @@ export function calculateLayout(): LayoutConfig {
   const cellSize = boardSize / 14;
   const stoneRadius = cellSize * STONE_RADIUS_RATIO;
   // 手机端棋盘向右下偏移，为下方面板留空间
-  const boardX = isMobile
-    ? ((W - boardSize) / 2 - cellSize) + cellSize * 2
-    : (W - boardSize) / 2 - cellSize;
-  const boardY = isMobile ? padding + cellSize : padding;
+  const boardX = (W - boardSize) / 2 - cellSize;
+  const boardY = padding;
 
   return {
     canvasWidth: W,
