@@ -1,63 +1,78 @@
 import { BOARD_SIZE } from '../constants';
 import { ChessColor } from '../enums';
-import type { BoardMatrix } from '../types';
+import type { BoardMatrix, HistoryStep, Point } from '../types';
 
 /**
- * 棋盘状态管理
- * 负责棋盘初始化、落子、获取状态
+ * 棋盘状态管理器
+ * 负责棋盘数据层的所有操作
  */
 export class Board {
   private grid: BoardMatrix;
+  private lastMove: Point | null = null;
+  private moveHistory: HistoryStep[] = [];
 
   constructor() {
-    this.grid = this.createEmptyBoard();
+    this.grid = this.createEmpty();
   }
 
   /** 创建空棋盘 */
-  private createEmptyBoard(): BoardMatrix {
-    const board: BoardMatrix = [];
+  private createEmpty(): BoardMatrix {
+    const grid: BoardMatrix = [];
     for (let r = 0; r < BOARD_SIZE; r++) {
-      board[r] = [];
-      for (let c = 0; c < BOARD_SIZE; c++) {
-        board[r][c] = ChessColor.EMPTY;
-      }
+      grid[r] = new Array(BOARD_SIZE).fill(ChessColor.EMPTY);
     }
-    return board;
+    return grid;
   }
 
-  /** 获取整个棋盘 */
+  /** 重置棋盘 */
+  reset(): void {
+    this.grid = this.createEmpty();
+    this.lastMove = null;
+    this.moveHistory = [];
+  }
+
+  /** 获取棋盘数据（只读） */
   getGrid(): BoardMatrix {
     return this.grid;
   }
 
   /** 获取指定位置棋子 */
-  getCell(row: number, col: number): ChessColor {
-    if (row < 0 || row >= BOARD_SIZE || col < 0 || col >= BOARD_SIZE) {
-      return ChessColor.EMPTY;
-    }
+  get(row: number, col: number): ChessColor {
     return this.grid[row][col];
   }
 
   /** 落子 */
-  placeStone(row: number, col: number, color: ChessColor): boolean {
-    if (this.grid[row][col] !== ChessColor.EMPTY) {
-      return false;
-    }
+  placeStone(row: number, col: number, color: ChessColor): void {
     this.grid[row][col] = color;
-    return true;
+    this.lastMove = { row, col };
+    this.moveHistory.push({ row, col, color });
   }
 
-  /** 移除棋子（悔棋用） */
-  removeStone(row: number, col: number): void {
-    this.grid[row][col] = ChessColor.EMPTY;
+  /** 获取最后落子位置 */
+  getLastMove(): Point | null {
+    return this.lastMove;
   }
 
-  /** 是否为空格 */
-  isEmpty(row: number, col: number): boolean {
-    return this.getCell(row, col) === ChessColor.EMPTY;
+  /** 获取落子历史 */
+  getHistory(): HistoryStep[] {
+    return this.moveHistory;
   }
 
-  /** 是否已满 */
+  /** 悔棋（移除最后n步） */
+  undo(steps: number): HistoryStep[] {
+    const removed: HistoryStep[] = [];
+    for (let i = 0; i < steps && this.moveHistory.length > 0; i++) {
+      const step = this.moveHistory.pop()!;
+      this.grid[step.row][step.col] = ChessColor.EMPTY;
+      removed.push(step);
+    }
+    this.lastMove = this.moveHistory.length > 0
+      ? { row: this.moveHistory[this.moveHistory.length - 1].row, col: this.moveHistory[this.moveHistory.length - 1].col }
+      : null;
+    return removed;
+  }
+
+  /** 棋盘是否已满 */
   isFull(): boolean {
     for (let r = 0; r < BOARD_SIZE; r++) {
       for (let c = 0; c < BOARD_SIZE; c++) {
@@ -67,29 +82,12 @@ export class Board {
     return true;
   }
 
-  /** 计算空格数 */
-  emptyCount(): number {
-    let count = 0;
-    for (let r = 0; r < BOARD_SIZE; r++) {
-      for (let c = 0; c < BOARD_SIZE; c++) {
-        if (this.grid[r][c] === ChessColor.EMPTY) count++;
-      }
-    }
-    return count;
-  }
-
-  /** 重置棋盘 */
-  reset(): void {
-    this.grid = this.createEmptyBoard();
-  }
-
-  /** 深拷贝当前棋盘状态 */
-  cloneGrid(): BoardMatrix {
-    return this.grid.map(row => [...row]);
-  }
-
-  /** 从已有矩阵恢复棋盘 */
-  setGrid(grid: BoardMatrix): void {
-    this.grid = grid.map(row => [...row]);
+  /** 导入棋盘状态（联机同步） */
+  importState(grid: BoardMatrix, history: HistoryStep[]): void {
+    this.grid = grid;
+    this.moveHistory = history;
+    this.lastMove = history.length > 0
+      ? { row: history[history.length - 1].row, col: history[history.length - 1].col }
+      : null;
   }
 }

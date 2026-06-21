@@ -1,47 +1,42 @@
 import { STORAGE_KEY_STATS } from '../constants';
-import { AiLevel } from '../enums';
 import type { GameStats } from '../types';
 
-const DEFAULT_STATS: GameStats = {
-  totalGames: 0,
-  wins: 0,
-  losses: 0,
-  draws: 0,
-  aiWinRates: {
-    [AiLevel.NOVICE]: { wins: 0, total: 0 },
-    [AiLevel.EASY]: { wins: 0, total: 0 },
-    [AiLevel.MEDIUM]: { wins: 0, total: 0 },
-    [AiLevel.HARD]: { wins: 0, total: 0 },
-    [AiLevel.MASTER]: { wins: 0, total: 0 },
-  },
-  winStreak: 0,
-  maxWinStreak: 0,
-};
+/**
+ * 战绩持久化（localStorage）
+ */
+export class StatsStorage {
+  private static defaults: GameStats = {
+    total: 0,
+    wins: 0,
+    losses: 0,
+    draws: 0,
+    streak: 0,
+    maxStreak: 0,
+  };
 
-export function loadStats(): GameStats {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY_STATS);
-    if (raw) {
-      return { ...DEFAULT_STATS, ...JSON.parse(raw) };
+  /** 加载战绩 */
+  static load(): GameStats {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_STATS);
+      if (!raw) return { ...StatsStorage.defaults };
+      const parsed = JSON.parse(raw);
+      return {
+        total: parsed.total || 0,
+        wins: parsed.wins || 0,
+        losses: parsed.losses || 0,
+        draws: parsed.draws || 0,
+        streak: parsed.streak || 0,
+        maxStreak: parsed.maxStreak || 0,
+      };
+    } catch {
+      return { ...StatsStorage.defaults };
     }
-  } catch (e) {
-    console.warn('[Stats] 读取失败，使用默认值');
   }
-  return { ...DEFAULT_STATS };
-}
 
-export function saveStats(stats: GameStats): void {
-  try {
-    localStorage.setItem(STORAGE_KEY_STATS, JSON.stringify(stats));
-  } catch (e) {
-    console.warn('[Stats] 保存失败');
-  }
-}
-
-export function clearStats(): void {
-  try {
-    localStorage.removeItem(STORAGE_KEY_STATS);
-  } catch (e) {
-    console.warn('[Stats] 清除失败');
+  /** 保存战绩 */
+  static save(stats: GameStats): void {
+    try {
+      localStorage.setItem(STORAGE_KEY_STATS, JSON.stringify(stats));
+    } catch { /* localStorage 不可用时静默失败 */ }
   }
 }

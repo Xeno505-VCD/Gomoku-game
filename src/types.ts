@@ -1,4 +1,4 @@
-import { AiLevel, ChessColor, DialogType, GameMode, GameStatus, PlayerRole } from './enums';
+import { AiLevel, ChessColor, GameMode, GameStatus, PlayerRole } from './enums';
 
 /** 棋盘坐标 */
 export interface Point {
@@ -30,105 +30,43 @@ export interface ChessScore {
   score: number;
 }
 
-/** AI决策返回 */
-export interface AiDecision {
-  point: Point;
-  score: number;
-  /** 是否为失误落子 */
-  isMistake: boolean;
-}
-
-/** 对局状态 */
-export interface GameState {
-  mode: GameMode;
-  status: GameStatus;
-  board: BoardMatrix;
-  currentPlayer: ChessColor;
-  /** 当前执棋方角色 */
-  currentRole: PlayerRole;
-  /** 人机模式下的AI难度 */
-  aiLevel: AiLevel;
-  /** 人机模式下玩家角色 */
-  playerRole: PlayerRole;
-  /** 胜利方 */
-  winner: ChessColor | null;
-  /** 五连棋子坐标列表 */
-  winLine: Point[];
-  /** 对局步数 */
-  moveCount: number;
-  /** 和棋申请方（联机用） */
-  drawRequester: PlayerRole | null;
-  /** 悔棋申请方（联机用） */
-  undoRequester: PlayerRole | null;
-}
-
 /** 落子历史记录 */
 export interface HistoryStep {
-  point: Point;
+  row: number;
+  col: number;
   color: ChessColor;
-  stepNumber: number;
-}
-
-/** 弹窗配置 */
-export interface DialogConfig {
-  type: DialogType;
-  /** 弹窗标题 */
-  title: string;
-  /** 弹窗消息内容 */
-  message: string;
-  /** 确认按钮文案 */
-  confirmText?: string;
-  /** 取消按钮文案 */
-  cancelText?: string;
-  /** 超时秒数（0=不超时） */
-  timeout: number;
-  /** 是否需要遮罩 */
-  hasMask: boolean;
 }
 
 /** 对局数据统计 */
 export interface GameStats {
-  totalGames: number;
+  total: number;
   wins: number;
   losses: number;
   draws: number;
-  /** 各AI难度胜率 */
-  aiWinRates: Record<AiLevel, { wins: number; total: number }>;
   /** 连胜场次 */
-  winStreak: number;
+  streak: number;
   /** 最大连胜 */
-  maxWinStreak: number;
-}
-
-/** 用户配置 */
-export interface UserConfig {
-  aiLevel: AiLevel;
-  playerRole: PlayerRole;
-  soundEnabled: boolean;
-  skinId: string;
+  maxStreak: number;
 }
 
 /** 布局尺寸配置 */
 export interface LayoutConfig {
+  /** 画布宽度 */
+  canvasWidth: number;
+  /** 画布高度 */
+  canvasHeight: number;
   /** 棋盘左上角X */
   boardX: number;
   /** 棋盘左上角Y */
   boardY: number;
   /** 单个格子像素 */
   cellSize: number;
-  /** 棋盘总宽（含边距） */
-  boardSize: number;
   /** 棋子半径 */
   stoneRadius: number;
-  /** 画布宽度 */
-  canvasWidth: number;
-  /** 画布高度 */
-  canvasHeight: number;
-  /** 右侧面板X起点 */
-  panelX: number;
-  /** 顶部信息栏Y */
-  infoY: number;
 }
 
-/** 事件总线回调类型 */
-export type EventCallback<T = unknown> = (data: T) => void;
+/** 联机WebSocket消息 */
+export interface WsMessage {
+  type: string;
+  [key: string]: unknown;
+}
