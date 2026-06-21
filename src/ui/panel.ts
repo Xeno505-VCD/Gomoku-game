@@ -1,28 +1,35 @@
-import { ChessColor, GameMode, GameStatus } from '../enums';
+import { ChessColor, GameMode } from '../enums';
 import type { GameStats } from '../types';
 
 /**
  * DOM面板管理器
- * 负责信息栏、侧面板按钮、战绩显示的绑定与更新
+ * 负责信息栏、侧面板按钮、模式弹窗、规则展开、反馈发送等全部UI交互
  */
 export class Panel {
-  // 元素引用
+  // 信息栏
   currentTurnEl: HTMLElement;
   gameStatusEl: HTMLElement;
   timerBarEl: HTMLElement;
   aiHintEl: HTMLElement;
-  statsBarEl: HTMLElement;
+  rulesToggleEl: HTMLElement;
+  rulesRowEl: HTMLElement;
+
+  // 模式弹窗
+  modeModalEl: HTMLElement;
+  btnMode: HTMLButtonElement;
+  modeLabelEl: HTMLElement;
+
+  // 侧面板
   onlinePanelEl: HTMLElement;
   aiPanelEl: HTMLElement;
   roomInfoEl: HTMLElement;
+  statsBarEl: HTMLElement;
+
+  // 操作按钮
   btnSurrender: HTMLButtonElement;
   btnDraw: HTMLButtonElement;
   btnUndo: HTMLButtonElement;
-
-  // 模式单选
-  modeAiRadio: HTMLInputElement;
-  modePvpRadio: HTMLInputElement;
-  modeOnlineRadio: HTMLInputElement;
+  btnRematch: HTMLButtonElement;
 
   // 联机房间
   btnCreateRoom: HTMLButtonElement;
@@ -32,95 +39,177 @@ export class Panel {
   // AI难度
   aiLevelSelect: HTMLSelectElement;
 
+  // 反馈
+  feedbackInput: HTMLTextAreaElement;
+  feedbackHint: HTMLElement;
+
+  // 回调
   private modeChangeCallbacks: ((mode: GameMode) => void)[] = [];
+  private feedbackCallback: ((msg: string) => void) | null = null;
 
   constructor() {
     this.currentTurnEl = document.getElementById('currentTurn')!;
     this.gameStatusEl = document.getElementById('gameStatus')!;
     this.timerBarEl = document.getElementById('timerBar')!;
     this.aiHintEl = document.getElementById('aiHint')!;
-    this.statsBarEl = document.getElementById('statsBar')!;
+    this.rulesToggleEl = document.getElementById('rulesToggle')!;
+    this.rulesRowEl = document.getElementById('rulesRow')!;
+    this.modeModalEl = document.getElementById('modeModal')!;
+    this.btnMode = document.getElementById('btnMode') as HTMLButtonElement;
+    this.modeLabelEl = document.getElementById('modeLabel')!;
     this.onlinePanelEl = document.getElementById('onlinePanel')!;
     this.aiPanelEl = document.getElementById('aiPanel')!;
     this.roomInfoEl = document.getElementById('roomInfo')!;
+    this.statsBarEl = document.getElementById('statsBar')!;
     this.btnSurrender = document.getElementById('btnSurrender') as HTMLButtonElement;
     this.btnDraw = document.getElementById('btnDraw') as HTMLButtonElement;
     this.btnUndo = document.getElementById('btnUndo') as HTMLButtonElement;
-    this.modeAiRadio = document.getElementById('modeAi') as HTMLInputElement;
-    this.modePvpRadio = document.getElementById('modePvp') as HTMLInputElement;
-    this.modeOnlineRadio = document.getElementById('modeOnline') as HTMLInputElement;
+    this.btnRematch = document.getElementById('btnRematch') as HTMLButtonElement;
     this.btnCreateRoom = document.getElementById('btnCreateRoom') as HTMLButtonElement;
     this.btnJoinRoom = document.getElementById('btnJoinRoom') as HTMLButtonElement;
     this.roomInput = document.getElementById('roomInput') as HTMLInputElement;
     this.aiLevelSelect = document.getElementById('aiLevel') as HTMLSelectElement;
+    this.feedbackInput = document.getElementById('feedbackInput') as HTMLTextAreaElement;
+    this.feedbackHint = document.getElementById('feedbackHint')!;
   }
 
-  /** 绑定模式切换事件 */
-  onModeChange(cb: (mode: GameMode) => void): void {
-    this.modeChangeCallbacks.push(cb);
-  }
+  /** 初始化所有UI监听 */
+  initAllListeners(
+    onModeChange: (mode: GameMode) => void,
+    onRematch: () => void,
+    onSendFeedback: (msg: string) => void,
+  ): void {
+    this.onModeChange(onModeChange);
 
-  /** 初始化模式切换监听 */
-  initModeListeners(getCurrentMode: () => GameMode): void {
-    this.modeAiRadio.addEventListener('change', () => this.fireModeChange(GameMode.AI));
-    this.modePvpRadio.addEventListener('change', () => this.fireModeChange(GameMode.PVP));
-    this.modeOnlineRadio.addEventListener('change', () => {
-      this.onlinePanelEl.style.display = 'flex';
-      this.aiPanelEl.style.display = 'none';
+    // 模式按钮 → 打开弹窗
+    this.btnMode.addEventListener('click', () => {
+      this.modeModalEl.style.display = 'flex';
+    });
+
+    // 弹窗内三个模式选择
+    document.getElementById('modeSelectPvp')!.addEventListener('click', () => {
+      this.hideModeModal();
+      this.fireModeChange(GameMode.PVP);
+    });
+    document.getElementById('modeSelectAi')!.addEventListener('click', () => {
+      this.hideModeModal();
+      this.fireModeChange(GameMode.AI);
+    });
+    document.getElementById('modeSelectOnline')!.addEventListener('click', () => {
+      this.hideModeModal();
       this.fireModeChange(GameMode.ONLINE);
     });
+    document.getElementById('modeModalCancel')!.addEventListener('click', () => {
+      this.hideModeModal();
+    });
+    // 点击遮罩关闭
+    document.getElementById('modeModalBg')!.addEventListener('click', () => {
+      this.hideModeModal();
+    });
+
+    // 规则展开/收起
+    this.rulesToggleEl.addEventListener('click', () => {
+      this.rulesRowEl.style.display = this.rulesRowEl.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // 再来一局按钮
+    this.btnRematch.addEventListener('click', () => onRematch());
+
+    // 反馈发送
+    document.getElementById('btnFeedback')!.addEventListener('click', () => {
+      const msg = this.feedbackInput.value.trim();
+      if (!msg) return;
+      onSendFeedback(msg);
+    });
+  }
+
+  /** 绑定模式切换回调 */
+  onModeChange(cb: (mode: GameMode) => void): void {
+    this.modeChangeCallbacks.push(cb);
   }
 
   private fireModeChange(mode: GameMode): void {
     for (const cb of this.modeChangeCallbacks) cb(mode);
   }
 
-  /** 切换到模式对应的面板显示 */
+  private hideModeModal(): void {
+    this.modeModalEl.style.display = 'none';
+  }
+
+  /** 根据模式切换面板UI */
   showModeUI(mode: GameMode): void {
+    this.hideModeModal();
     if (mode === GameMode.ONLINE) {
       this.onlinePanelEl.style.display = 'flex';
       this.aiPanelEl.style.display = 'none';
+      this.modeLabelEl.textContent = '联机对战';
+    } else if (mode === GameMode.AI) {
+      this.onlinePanelEl.style.display = 'none';
+      this.aiPanelEl.style.display = 'block';
+      this.modeLabelEl.textContent = '人机对战';
+      // AI模式显示难度
+      this.aiLevelSelect.style.display = '';
     } else {
       this.onlinePanelEl.style.display = 'none';
       this.aiPanelEl.style.display = 'block';
+      this.modeLabelEl.textContent = '双人对战';
+      // 双人模式隐藏难度选择
+      this.aiLevelSelect.style.display = 'none';
+    }
+    if (mode !== GameMode.ONLINE) {
       this.timerBarEl.style.display = 'none';
     }
   }
 
-  /** 更新当前执棋方显示 */
+  // ==================== 信息栏更新 ====================
+
   updateTurn(color: ChessColor): void {
     this.currentTurnEl.textContent = color === ChessColor.BLACK ? '黑棋' : '白棋';
   }
 
-  /** 更新对局状态文字 */
   updateStatus(text: string): void {
     this.gameStatusEl.textContent = text;
   }
 
-  /** 更新提示文字 */
   updateHint(text: string): void {
     this.aiHintEl.textContent = text;
   }
 
-  /** 更新战绩显示 */
   updateStats(stats: GameStats): void {
     this.statsBarEl.textContent =
       `总局:${stats.total} 胜:${stats.wins} 负:${stats.losses} 和:${stats.draws} | 连胜:${stats.streak}(${stats.maxStreak}场最佳)`;
   }
 
-  /** 更新联机房间信息 */
   updateRoomInfo(text: string): void {
     this.roomInfoEl.textContent = text;
   }
 
-  /** 设置按钮可用/禁用 */
+  // ==================== 按钮状态 ====================
+
   setButtonsEnabled(enabled: boolean): void {
     this.btnSurrender.disabled = !enabled;
     this.btnDraw.disabled = !enabled;
     this.btnUndo.disabled = !enabled;
   }
 
-  /** 显示/隐藏计时器 */
+  /** 联机对局结束：隐藏操作按钮，显示再来一局 */
+  showRematchButton(): void {
+    this.btnSurrender.style.display = 'none';
+    this.btnDraw.style.display = 'none';
+    this.btnUndo.style.display = 'none';
+    this.btnRematch.style.display = '';
+  }
+
+  /** 重置为正常操作按钮 */
+  hideRematchButton(): void {
+    this.btnSurrender.style.display = '';
+    this.btnDraw.style.display = '';
+    this.btnUndo.style.display = '';
+    this.btnRematch.style.display = 'none';
+  }
+
+  // ==================== 计时器 ====================
+
   showTimer(seconds: number): void {
     this.timerBarEl.style.display = 'inline';
     this.timerBarEl.textContent = `⏱ ${seconds}s`;
@@ -134,17 +223,35 @@ export class Panel {
     this.timerBarEl.textContent = `⏱ ${seconds}s`;
   }
 
-  /** 获取当前选中的AI难度值 */
+  // ==================== 反馈 ====================
+
+  showFeedbackSent(): void {
+    this.feedbackHint.style.display = 'block';
+    this.feedbackHint.textContent = '已发送，谢谢！';
+    this.feedbackInput.value = '';
+    setTimeout(() => {
+      this.feedbackHint.style.display = 'none';
+    }, 3000);
+  }
+
+  showFeedbackError(): void {
+    this.feedbackHint.style.display = 'block';
+    this.feedbackHint.textContent = '发送失败，请重试';
+    setTimeout(() => {
+      this.feedbackHint.style.display = 'none';
+    }, 3000);
+  }
+
+  // ==================== 获取值 ====================
+
   getAiLevel(): number {
     return parseInt(this.aiLevelSelect.value);
   }
 
-  /** 获取房间号输入 */
   getRoomInput(): string {
     return this.roomInput.value;
   }
 
-  /** 生成随机房间号 */
   static randomRoomId(): string {
     return String(Math.floor(1000 + Math.random() * 9000));
   }

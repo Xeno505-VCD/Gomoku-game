@@ -36,11 +36,16 @@ export interface OnlineCallbacks {
   onTimerReset: () => void;
   /** 倒计时停止 */
   onTimerStop: () => void;
+  /** 再来一局：收到申请 */
+  onRematchRequest: () => void;
+  /** 再来一局：被拒 */
+  onRematchRejected: () => void;
+  /** 再来一局：开始 */
+  onRematchStart: () => void;
 }
 
 /**
  * 联机WebSocket管理器
- * 采用SSOT（单一真相源）模式：服务器为唯一权威，客户端不本地先行绘制
  */
 export class OnlineManager {
   private ws: WebSocket | null = null;
@@ -53,90 +58,86 @@ export class OnlineManager {
   private pingInterval: ReturnType<typeof setInterval> | null = null;
   private intentionalClose = false;
 
-  /** 注册回调 */
   setCallbacks(cbs: OnlineCallbacks): void {
     this.callbacks = cbs;
   }
 
-  /** 创建房间 */
   createRoom(): string {
     this.roomId = String(Math.floor(1000 + Math.random() * 9000));
     this.connect();
     return this.roomId;
   }
 
-  /** 加入房间 */
   joinRoom(roomId: string): void {
     this.roomId = roomId;
     this.connect();
   }
 
-  /** 获取当前房间号 */
   getRoomId(): string {
     return this.roomId;
   }
 
-  /** 获取我的颜色 */
   getMyColor(): ChessColor {
     return this.myColor;
   }
 
-  /** 发送落子 */
   sendMove(row: number, col: number): void {
     this.send({ type: 'MOVE', row, col });
   }
 
-  /** 发送认输 */
   sendSurrender(): void {
     this.send({ type: 'SURRENDER' });
   }
 
-  /** 发送和棋申请 */
   sendDrawRequest(): void {
     this.send({ type: 'DRAW_REQUEST' });
   }
 
-  /** 发送和棋回复 */
   sendDrawResponse(accept: boolean): void {
     this.send({ type: 'DRAW_RESPONSE', accept });
   }
 
-  /** 发送悔棋申请 */
   sendUndoRequest(): void {
     this.send({ type: 'UNDO_REQUEST' });
   }
 
-  /** 发送悔棋回复 */
   sendUndoResponse(accept: boolean): void {
     this.send({ type: 'UNDO_RESPONSE', accept });
   }
 
-  /** 断开连接 */
+  sendRematchRequest(): void {
+    this.send({ type: 'REMATCH_REQUEST' });
+  }
+
+  sendRematchResponse(accept: boolean): void {
+    this.send({ type: 'REMATCH_RESPONSE', accept });
+  }
+
   disconnect(): void {
     this.intentionalClose = true;
     this.cleanup();
   }
 
-  // ==================== 内部实现 ====================
-
   private connect(): void {
     this.intentionalClose = false;
     this.cleanup();
     const wsUrl = WS_URL.replace('https', 'wss') + '/join?room=' + this.roomId;
-    this.ws = new WebSocket(wsUrl);
+    if (wsUrl.startsWith('ws://')) {
+      this.ws = new WebSocket('ws://localhost:3000/join?room=' + this.roomId);
+    } else {
+      this.ws = new WebSocket(wsUrl);
+    }
 
     this.ws.onopen = () => {
       this.reconnectAttempts = 0;
-      if (this.callbacks) {
-        this.callbacks.onTimerStop();
-      }
+      this.callbacks?.onTimerStop();
     };
 
     this.ws.onmessage = (e) => {
       try {
         const msg: WsMessage = JSON.parse(e.data);
         this.handleMessage(msg);
-      } catch { /* 忽略解析失败的消息 */ }
+      } catch { /* ignore */ }
     };
 
     this.ws.onclose = () => {
@@ -144,7 +145,7 @@ export class OnlineManager {
       if (!this.intentionalClose && this.reconnectAttempts < this.maxReconnectAttempts) {
         this.scheduleReconnect();
       } else {
-        if (this.callbacks) this.callbacks.onDisconnect();
+        this.callbacks?.onDisconnect();
       }
     };
 
@@ -171,7 +172,6 @@ export class OnlineManager {
         cb.onTimerStart();
         break;
       case 'MOVE':
-        // SSOT模式：完全信任服务器，直接绘制
         cb.onMove(
           msg.row as number,
           msg.col as number,
@@ -212,6 +212,15 @@ export class OnlineManager {
         cb.onOpponentLeft();
         cb.onTimerStop();
         break;
+      case 'REMATCH_REQUEST':
+        cb.onRematchRequest();
+        break;
+      case 'REMATCH_REJECTED':
+        cb.onRematchRejected();
+        break;
+      case 'REMATCH_START':
+        cb.onRematchStart();
+        break;
       case 'FULL':
         cb.onDisconnect();
         break;
@@ -243,9 +252,7 @@ export class OnlineManager {
     this.reconnectAttempts++;
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 16000);
     this.reconnectTimer = setTimeout(() => {
-      if (!this.intentionalClose) {
-        this.connect();
-      }
+      if (!this.intentionalClose) this.connect();
     }, delay);
   }
 
