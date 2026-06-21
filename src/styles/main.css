@@ -222,8 +222,15 @@ body {
   font-size: 14px;
   flex-shrink: 0;
   min-width: 140px;
-  /* 上移：减少上间距 */
   margin-top: -4px;
+}
+
+/* 面板行（PC端保持列方向内的自然排列） */
+.panel-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
 
 #sidePanel button {
@@ -266,14 +273,6 @@ body {
   width: 120px;
 }
 
-#sidePanel label {
-  cursor: pointer;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
 #statsBar {
   color: #FFECB3;
   font-size: 12px;
@@ -287,38 +286,6 @@ body {
   font-size: 13px;
 }
 
-/* 联机面板 */
-#onlinePanel input {
-  width: 120px;
-  padding: 4px;
-  border-radius: 4px;
-  border: 1px solid #8D6E63;
-  background: #5D4037;
-  color: #FFECB3;
-  font-size: 13px;
-}
-
-/* 反馈区 */
-#feedbackSection {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  width: 120px;
-}
-
-#feedbackSection textarea {
-  width: 120px;
-  padding: 4px;
-  border-radius: 4px;
-  border: 1px solid #8D6E63;
-  background: #5D4037;
-  color: #FFECB3;
-  font-size: 11px;
-  font-family: inherit;
-  resize: none;
-}
-
 /* ==================== 手机端 ==================== */
 @media (max-width: 600px) {
   #mainArea {
@@ -326,41 +293,52 @@ body {
     align-items: center;
   }
 
-  /* 手机端侧面板：紧凑横排 */
   #sidePanel {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 5px;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
     min-width: auto;
-    padding: 2px 4px;
-    font-size: 11px;
+    padding: 6px 0;
     margin-top: 0;
     width: 100%;
   }
 
-  #sidePanel > * {
-    margin: 0 1px;
+  .panel-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 0 8px;
   }
 
   #sidePanel button {
-    width: 68px;
-    font-size: 11px;
-    padding: 7px 0;
+    width: 72px;
+    font-size: 12px;
+    padding: 8px 0;
   }
 
   #sidePanel select {
-    width: 68px;
-    font-size: 11px;
+    width: 72px;
+    font-size: 12px;
   }
 
-  #sidePanel label {
-    font-size: 11px;
-  }
-
-  /* 模式按钮 */
   #btnMode {
-    width: 68px !important;
+    width: 72px !important;
+  }
+
+  /* 战绩行：棋盘下方第一眼 */
+  #rowStats {
+    order: -1;
+    background: rgba(62, 39, 35, 0.8);
+    border-radius: 6px;
+    padding: 4px 0;
+  }
+
+  #statsBar {
+    font-size: 12px;
+    font-weight: bold;
   }
 
   /* 联机面板 */
@@ -368,12 +346,34 @@ body {
     flex-direction: row !important;
     flex-wrap: wrap;
     justify-content: center;
-    width: 100% !important;
-    gap: 4px;
+    gap: 6px;
   }
 
   #onlinePanel input {
     width: 80px !important;
+  }
+
+  #onlinePanel button {
+    width: 72px;
+  }
+
+  /* 反馈区 */
+  #feedbackSection {
+    flex-direction: row;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+  }
+
+  #feedbackSection textarea {
+    width: 120px;
+    font-size: 11px;
+  }
+
+  #feedbackSection button {
+    width: 56px !important;
+    font-size: 11px;
+    padding: 6px 0;
   }
 
   /* 信息栏 */
@@ -384,18 +384,6 @@ body {
   }
 
   #rulesRow {
-    font-size: 10px;
-  }
-
-  /* 反馈区 */
-  #feedbackSection {
-    width: 100%;
-    flex-direction: row;
-    gap: 4px;
-  }
-
-  #feedbackSection textarea {
-    width: 100px;
     font-size: 10px;
   }
 
