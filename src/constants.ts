@@ -34,5 +34,9 @@ export const DEFAULT_AI_LEVEL = 2; // MEDIUM
 export const STORAGE_KEY_STATS = 'gomoku_stats';
 
 // ==================== 联机 ====================
-export const WS_URL = 'https://gomoku-game-m1ls.onrender.com';
+/** 本地开发时连 localhost，部署后连 Render */
+export const WS_URL = 
+  typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'ws://localhost:3000'
+    : 'https://gomoku-game-m1ls.onrender.com';
 export const MOVE_TIMER_SECONDS = 30;
