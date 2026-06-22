@@ -159,10 +159,13 @@ body {
 
   .app-container {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    padding: 8px;
-    gap: 0;
+    padding-top: calc(8px + env(safe-area-inset-top));
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    padding-left: 8px;
+    padding-right: 8px;
     box-sizing: border-box;
   }
 
