@@ -192,17 +192,20 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow: hidden;
     width: 100%;
   }
 
   #gameCanvas {
-    width: auto !important;
-    height: auto !important;
+    width: 100% !important;
+    height: 100% !important;
     max-width: 90vw;
+    max-height: 100%;
     aspect-ratio: 1 / 1;
     margin: 0 auto;
     border-radius: 8px;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+    background-color: #DEB887;
   }
 
   /* Footer 按钮区域 */
@@ -213,8 +216,8 @@ body {
     align-items: center;
     gap: 0;
     min-width: auto;
-    padding: 4px 0;
-    margin-top: 0;
+    padding: 2px 0;
+    margin-top: 2px;
     width: 100%;
   }
 
@@ -226,7 +229,7 @@ body {
     gap: 10px;
     width: 100%;
     max-width: 90vw;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }
 
   #sidePanel button { width: 72px; font-size: 12px; padding: 8px 0; }
