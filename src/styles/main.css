@@ -9,13 +9,19 @@ body {
   font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
 }
 
-/* ==================== PC容器 ==================== */
-.app-wrapper {
+/* PC默认 */
+.mobile-only { display: none; }
+.pc-only { display: inline; }
+
+.app-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
 }
+
+/* ==================== modeLine（手机端模式标签行） ==================== */
+#modeLine { width: 100%; text-align: center; color: #FFECB3; font-size: 13px; font-weight: bold; flex-shrink: 0; padding: 2px 0; }
 
 /* ==================== 顶部信息栏 ==================== */
 #infoBar {
@@ -26,15 +32,13 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   font-size: 13px;
   flex-shrink: 0;
   flex-wrap: wrap;
   padding: 0 8px;
 }
-
 #infoBar span { white-space: nowrap; }
-
 #rulesToggle:hover { color: #FFF !important; }
 
 /* 规则展开行 */
@@ -44,10 +48,20 @@ body {
   color: #FFECB3;
   font-size: 11px;
   text-align: center;
-  padding: 6px 16px;
+  padding: 4px 16px;
   line-height: 1.5;
   flex-shrink: 0;
 }
+
+/* 战绩 */
+#rowStats {
+  width: 100%;
+  background-color: #3E2723;
+  text-align: center;
+  padding: 3px 8px;
+  flex-shrink: 0;
+}
+#statsBar { color: #FFECB3; font-size: 12px; line-height: 1.5; }
 
 /* ==================== PC主区域 ==================== */
 #mainArea {
@@ -55,189 +69,103 @@ body {
   align-items: flex-start;
   justify-content: center;
   width: 100%;
-  position: relative;
 }
-
-.canvas-wrapper {
-  flex-shrink: 0;
-}
-
-#gameCanvas {
-  cursor: pointer;
-  touch-action: manipulation;
-}
+.canvas-wrapper { flex-shrink: 0; }
+#gameCanvas { cursor: pointer; touch-action: manipulation; }
 
 .btn-red { background-color: #E53935; }
 .btn-orange { background-color: #FB8C00; }
 .btn-blue { background-color: #1E88E5; }
 
-/* ==================== 模式弹窗 ==================== */
+/* ==================== 弹窗（fixed allowed） ==================== */
 #modeModal, #rematchModal, #roomInputModal {
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 100; display: flex; align-items: center; justify-content: center;
 }
 #modeModalBg, #rematchModalBg, #roomInputModalBg {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0, 0, 0, 0.55);
 }
 #modeModalBox, #rematchModalBox, #roomInputModalBox {
   position: relative; z-index: 1;
-  background: #3E2723;
-  border: 2px solid #8D6E63;
-  border-radius: 12px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
+  background: #3E2723; border: 2px solid #8D6E63; border-radius: 12px;
+  padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 10px;
 }
 #modeModalBox { min-width: 200px; max-width: 260px; }
-#modeModalTitle, #rematchModalTitle, #roomInputModalTitle {
-  color: #FFD700; font-weight: bold; font-size: 16px;
-}
+#modeModalTitle, #rematchModalTitle, #roomInputModalTitle { color: #FFD700; font-weight: bold; font-size: 16px; }
 #rematchModalTitle { font-size: 15px; }
 #roomInputModalField {
-  width: 160px;
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #8D6E63;
-  background: #5D4037;
-  color: #FFECB3;
-  font-size: 18px;
-  text-align: center;
-  font-family: inherit;
+  width: 160px; padding: 8px; border-radius: 6px;
+  border: 1px solid #8D6E63; background: #5D4037;
+  color: #FFECB3; font-size: 18px; text-align: center; font-family: inherit;
 }
 #roomInputModalField::-webkit-inner-spin-button,
 #roomInputModalField::-webkit-outer-spin-button { -webkit-appearance: none; }
 
 .btn-mode-select {
-  width: 180px; padding: 12px 0;
-  border: none; border-radius: 8px;
-  cursor: pointer; font-family: inherit;
-  font-size: 15px; font-weight: bold;
+  width: 180px; padding: 12px 0; border: none; border-radius: 8px;
+  cursor: pointer; font-family: inherit; font-size: 15px; font-weight: bold;
   color: #fff; background-color: #5D4037;
   transition: transform 0.1s, background-color 0.2s;
 }
 .btn-mode-select:hover { background-color: #795548; transform: scale(1.03); }
-.btn-mode-cancel {
-  width: 180px; padding: 8px 0;
-  border: 1px solid #8D6E63; border-radius: 8px;
-  cursor: pointer; font-family: inherit;
-  font-size: 13px; color: #FFECB3; background: transparent;
-}
+.btn-mode-cancel { width: 180px; padding: 8px 0; border: 1px solid #8D6E63; border-radius: 8px; cursor: pointer; font-family: inherit; font-size: 13px; color: #FFECB3; background: transparent; }
+#rematchModalBox button { width: 120px; padding: 10px 0; border: none; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: bold; color: #fff; }
 
-#rematchModalBox button {
-  width: 120px; padding: 10px 0;
-  border: none; border-radius: 6px;
-  cursor: pointer; font-family: inherit;
-  font-size: 13px; font-weight: bold; color: #fff;
-}
-
-/* ==================== PC侧面板 ==================== */
-#sidePanel {
+/* ==================== PC Footer ==================== */
+.control-footer {
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 8px;
-  gap: 8px;
+  gap: 6px;
   color: #FFECB3;
   font-size: 14px;
   flex-shrink: 0;
   min-width: 140px;
   margin-top: -4px;
 }
-
-.panel-row {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-
+.c-row { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 #sidePanel button {
-  border: none; cursor: pointer;
-  font-family: inherit; font-size: 13px;
-  font-weight: bold; color: #fff;
-  border-radius: 6px; padding: 10px 0;
-  transition: transform 0.1s, opacity 0.2s;
-  width: 120px; flex-shrink: 0;
+  border: none; cursor: pointer; font-family: inherit; font-size: 13px;
+  font-weight: bold; color: #fff; border-radius: 6px; padding: 10px 0;
+  transition: transform 0.1s, opacity 0.2s; width: 120px; flex-shrink: 0;
 }
 #sidePanel button:hover:not(:disabled) { opacity: 0.9; transform: scale(1.02); }
 #sidePanel button:active:not(:disabled) { transform: scale(0.96); }
-#sidePanel button:disabled {
-  background-color: #9E9E9E !important;
-  color: #616161 !important;
-  cursor: not-allowed; opacity: 0.7;
-}
+#sidePanel button:disabled { background-color: #9E9E9E !important; color: #616161 !important; cursor: not-allowed; opacity: 0.7; }
+#sidePanel select { padding: 4px 8px; border-radius: 4px; background: #5D4037; color: #FFECB3; border: 1px solid #8D6E63; font-size: 13px; width: 120px; }
 
-#sidePanel select {
-  padding: 4px 8px; border-radius: 4px;
-  background: #5D4037; color: #FFECB3;
-  border: 1px solid #8D6E63;
-  font-size: 13px; width: 120px;
-}
-
-/* PC端联机输入框 */
 .room-input-pc { display: block; }
 .btn-room-input-mobile { display: none !important; }
-#onlinePanel input {
-  width: 120px; padding: 4px;
-  border-radius: 4px;
-  border: 1px solid #8D6E63;
-  background: #5D4037;
-  color: #FFECB3; font-size: 13px;
-}
-
-#statsBar { color: #FFECB3; font-size: 12px; text-align: center; line-height: 1.5; }
+#onlinePanel input { width: 120px; padding: 4px; border-radius: 4px; border: 1px solid #8D6E63; background: #5D4037; color: #FFECB3; font-size: 13px; }
+#feedbackSection textarea { width: 120px; padding: 4px; border-radius: 4px; border: 1px solid #8D6E63; background: #5D4037; color: #FFECB3; font-size: 11px; font-family: inherit; resize: none; }
 #timerBar { color: #FFD700; font-weight: bold; font-size: 13px; }
-
-/* 反馈区 */
-#feedbackSection {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  width: 120px;
-}
-#feedbackSection textarea {
-  width: 120px; padding: 4px;
-  border-radius: 4px;
-  border: 1px solid #8D6E63;
-  background: #5D4037; color: #FFECB3;
-  font-size: 11px; font-family: inherit; resize: none;
-}
 
 /* ==================== 手机端 ==================== */
 @media (max-width: 600px) {
-  html, body {
-    height: 100%;
-    overflow: hidden;
-  }
+  html, body { height: 100%; overflow: hidden; }
+  .mobile-only { display: block; }
+  .pc-only { display: none !important; }
 
-  .app-wrapper {
+  .app-container {
     height: 100vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     padding: 8px;
     gap: 0;
+    box-sizing: border-box;
   }
 
-  #infoBar {
-    flex-shrink: 0;
-    font-size: 11px; gap: 6px;
-    height: 30px; padding: 0 6px;
-  }
+  #modeLine { flex-shrink: 0; padding: 2px 0; }
 
-  #rulesRow {
-    flex-shrink: 0;
-    font-size: 10px; padding: 3px 10px;
-  }
+  #infoBar { flex-shrink: 0; height: 28px; font-size: 11px; gap: 4px; padding: 0 4px; }
+
+  #rulesRow { flex-shrink: 0; font-size: 10px; padding: 3px 10px; }
+
+  #rowStats { flex-shrink: 0; padding: 2px 6px; }
+  #statsBar { font-size: 12px; font-weight: bold; }
 
   #mainArea {
     flex: 1;
@@ -245,7 +173,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     width: 100%;
   }
 
@@ -266,88 +194,44 @@ body {
     margin: 0 auto;
     border-radius: 8px;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
-    object-fit: contain;
   }
 
-  /* 控制面板固定在底部 */
-  #sidePanel {
-    flex: 0 0 auto;
+  /* Footer 按钮区域 */
+  .control-footer {
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 0;
     min-width: auto;
-    padding: 4px 8px;
+    padding: 4px 0;
     margin-top: 0;
     width: 100%;
   }
 
-  .panel-row {
+  .c-row {
     flex-direction: row;
-    flex-wrap: wrap;
+    display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     width: 100%;
-    padding: 0 4px;
+    max-width: 90vw;
+    margin-bottom: 8px;
   }
 
-  /* 战绩：手机端在DOM第一位置，自然在棋盘上方 */
-  #rowStats {
-    background: rgba(62, 39, 35, 0.9);
-    border-radius: 6px;
-    padding: 3px 0;
-    margin: 0 4px;
-  }
+  #sidePanel button { width: 72px; font-size: 12px; padding: 8px 0; }
+  #sidePanel select { width: 72px; font-size: 12px; }
 
-  #statsBar {
-    font-size: 12px;
-    font-weight: bold;
-  }
-
-  #sidePanel button {
-    width: 72px; font-size: 12px; padding: 8px 0;
-  }
-
-  #sidePanel select {
-    width: 72px; font-size: 12px;
-  }
-
-  #btnMode { width: 72px !important; }
-
-  /* 联机面板 - 手机端隐藏PC输入框，显示按钮 */
   .room-input-pc { display: none !important; }
   .btn-room-input-mobile { display: inline-block !important; }
 
-  #onlinePanel {
-    flex-direction: row !important;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-  }
-
+  #onlinePanel { flex-direction: row !important; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100% !important; }
   #onlinePanel button { width: 72px; }
 
-  /* 反馈区 */
-  #feedbackSection {
-    flex-direction: row;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-  }
-  #feedbackSection textarea {
-    width: 120px; font-size: 11px;
-  }
-  #feedbackSection button {
-    width: 56px !important; font-size: 11px; padding: 6px 0;
-  }
+  #feedbackSection textarea { width: 120px; font-size: 11px; }
+  #feedbackSection button { width: 56px !important; font-size: 11px; padding: 6px 0; }
 
-  /* 弹窗 */
-  #modeModalBox {
-    min-width: 170px; max-width: 220px;
-  }
-  .btn-mode-select {
-    width: 150px; font-size: 14px; padding: 10px 0;
-  }
+  #modeModalBox { min-width: 170px; max-width: 220px; }
+  .btn-mode-select { width: 150px; font-size: 14px; padding: 10px 0; }
 }

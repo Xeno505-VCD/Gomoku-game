@@ -144,22 +144,25 @@ export class Panel {
   /** 根据模式切换面板UI */
   showModeUI(mode: GameMode): void {
     this.hideModeModal();
+    const modeLine = document.getElementById('modeLine');
     if (mode === GameMode.ONLINE) {
       this.onlinePanelEl.style.display = 'flex';
       this.aiPanelEl.style.display = 'none';
       this.modeLabelEl.textContent = '联机对战';
+      if (modeLine) modeLine.textContent = '联机对战';
     } else if (mode === GameMode.AI) {
       this.onlinePanelEl.style.display = 'none';
       this.aiPanelEl.style.display = 'block';
       this.modeLabelEl.textContent = '人机对战';
-      // AI模式显示难度
       this.aiLevelSelect.style.display = '';
+      const diff = this.aiLevelSelect.options[this.aiLevelSelect.selectedIndex]?.text || '普通';
+      if (modeLine) modeLine.textContent = `人机对战：(${diff})`;
     } else {
       this.onlinePanelEl.style.display = 'none';
       this.aiPanelEl.style.display = 'block';
       this.modeLabelEl.textContent = '双人对战';
-      // 双人模式隐藏难度选择
       this.aiLevelSelect.style.display = 'none';
+      if (modeLine) modeLine.textContent = '双人对战';
     }
     if (mode !== GameMode.ONLINE) {
       this.timerBarEl.style.display = 'none';
