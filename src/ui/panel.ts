@@ -35,6 +35,9 @@ export class Panel {
   btnCreateRoom: HTMLButtonElement;
   btnJoinRoom: HTMLButtonElement;
   roomInput: HTMLInputElement;
+  // 手机端房间号弹窗
+  roomInputModalEl: HTMLElement;
+  roomInputModalField: HTMLInputElement;
 
   // AI难度
   aiLevelSelect: HTMLSelectElement;
@@ -68,6 +71,8 @@ export class Panel {
     this.btnCreateRoom = document.getElementById('btnCreateRoom') as HTMLButtonElement;
     this.btnJoinRoom = document.getElementById('btnJoinRoom') as HTMLButtonElement;
     this.roomInput = document.getElementById('roomInput') as HTMLInputElement;
+    this.roomInputModalEl = document.getElementById('roomInputModal')!;
+    this.roomInputModalField = document.getElementById('roomInputModalField') as HTMLInputElement;
     this.aiLevelSelect = document.getElementById('aiLevel') as HTMLSelectElement;
     this.feedbackInput = document.getElementById('feedbackInput') as HTMLTextAreaElement;
     this.feedbackHint = document.getElementById('feedbackHint')!;

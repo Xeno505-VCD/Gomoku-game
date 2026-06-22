@@ -54,6 +54,31 @@ class GomokuApp {
     this.panel.btnUndo.addEventListener('click', () => this.requestUndo());
     this.panel.btnCreateRoom.addEventListener('click', () => this.createRoom());
     this.panel.btnJoinRoom.addEventListener('click', () => this.joinRoom());
+    // 手机端房间号弹窗
+    const btnRoomInputMobile = document.getElementById('btnRoomInputMobile');
+    if (btnRoomInputMobile) {
+      btnRoomInputMobile.addEventListener('click', () => {
+        document.getElementById('roomInputModal')!.style.display = 'flex';
+      });
+    }
+    document.getElementById('roomInputModalConfirm')!.addEventListener('click', () => {
+      document.getElementById('roomInputModal')!.style.display = 'none';
+      const field = document.getElementById('roomInputModalField') as HTMLInputElement;
+      const roomId = field.value;
+      if (!roomId || roomId.length !== 4) { alert('请输入4位房间号'); return; }
+      this.online.joinRoom(roomId);
+      this.panel.updateRoomInfo('已连接 房间:' + roomId);
+      this.onlineActive = true;
+      this.controller.setMode(GameMode.ONLINE);
+      this.controller.reset();
+      field.value = '';
+    });
+    document.getElementById('roomInputModalCancel')!.addEventListener('click', () => {
+      document.getElementById('roomInputModal')!.style.display = 'none';
+    });
+    document.getElementById('roomInputModalBg')!.addEventListener('click', () => {
+      document.getElementById('roomInputModal')!.style.display = 'none';
+    });
     this.panel.aiLevelSelect.addEventListener('change', () => {
       this.controller.setAiLevel(this.panel.getAiLevel());
       this.restart();
