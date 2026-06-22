@@ -158,10 +158,9 @@ body {
   .pc-only { display: none !important; }
 
   .app-container {
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
     padding: 8px;
     gap: 0;
     box-sizing: border-box;
@@ -177,8 +176,7 @@ body {
   #statsBar { font-size: 12px; font-weight: bold; }
 
   #mainArea {
-    flex: 1;
-    min-height: 0;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -187,12 +185,10 @@ body {
   }
 
   .canvas-wrapper {
-    flex: 1;
-    min-height: 0;
+    flex: 0 0 auto;
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden;
     width: 100%;
   }
 
