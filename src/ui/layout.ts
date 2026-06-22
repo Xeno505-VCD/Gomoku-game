@@ -17,19 +17,29 @@ export function calculateLayout(): LayoutConfig {
   const H = Math.min(window.innerHeight - 160, isMobile ? 650 : CANVAS_MAX_HEIGHT);
   const usableW = W;
   const usableH = H;
-  const boardAreaW = usableW * (isMobile ? 0.95 : 0.78);
+  const boardAreaW = usableW * (isMobile ? 0.92 : 0.78);
   const maxBoard = Math.min(boardAreaW, usableH);
   const padding = Math.max(maxBoard * BOARD_PADDING_RATIO, 8);
   const boardSize = maxBoard - padding * 2;
   const cellSize = boardSize / 14;
   const stoneRadius = cellSize * STONE_RADIUS_RATIO;
-  // 手机端棋盘向右下偏移，为下方面板留空间
-  const boardX = (W - boardSize) / 2 - cellSize;
-  const boardY = padding;
+
+  // 手机端：Canvas像素也正方形，刚好包含棋盘(14格+半格边距)，与CSS aspect-ratio对齐
+  let canvasW = W;
+  let canvasH = H;
+  let boardX = (W - boardSize) / 2 - cellSize;
+  let boardY = padding;
+  if (isMobile) {
+    const boardPixels = Math.round(cellSize * 15);
+    canvasW = boardPixels;
+    canvasH = boardPixels;
+    boardX = cellSize * 0.5;
+    boardY = cellSize * 0.5;
+  }
 
   return {
-    canvasWidth: W,
-    canvasHeight: H,
+    canvasWidth: canvasW,
+    canvasHeight: canvasH,
     boardX,
     boardY,
     cellSize,
