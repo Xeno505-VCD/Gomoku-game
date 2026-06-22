@@ -185,8 +185,8 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: max(40px, 6vh);
-    margin-top: max(40px, 6vh);
+    gap: max(80px, 10vh);
+    margin-top: max(80px, 10vh);
     width: 100%;
   }
 
