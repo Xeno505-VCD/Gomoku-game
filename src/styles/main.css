@@ -158,11 +158,10 @@ body {
   .pc-only { display: none !important; }
 
   .app-container {
-    height: 100vh;
-    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
     box-sizing: border-box;
     padding-top: calc(8px + env(safe-area-inset-top));
     padding-bottom: calc(8px + env(safe-area-inset-bottom));
@@ -184,8 +183,8 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: max(20px, 3vh);
-    margin-top: max(20px, 3vh);
+    gap: 36px;
+    margin-top: 24px;
     width: 100%;
   }
 
@@ -230,7 +229,7 @@ body {
     gap: 8px;
     width: 100%;
     max-width: 90vw;
-    margin-bottom: 2px;
+    margin-bottom: 14px;
   }
 
   #sidePanel button { width: 72px; font-size: 12px; padding: 8px 0; }
