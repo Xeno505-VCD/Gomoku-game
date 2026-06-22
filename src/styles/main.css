@@ -235,7 +235,6 @@ body {
   #sidePanel select { width: 72px; font-size: 12px; }
 
   .room-input-pc { display: none !important; }
-  .btn-room-input-mobile { display: inline-block !important; }
 
   #onlinePanel { flex-direction: row !important; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100% !important; }
   #onlinePanel button { width: 72px; }
