@@ -8,8 +8,8 @@
 </head>
 <body>
 <div class="app-container">
-  <!-- 手机端模式标签行 -->
-  <div id="modeLine" class="mobile-only">人机对战：(普通)</div>
+  <!-- 模式标签行 -->
+  <div id="modeLine">人机对战：(普通)</div>
 
   <!-- 顶部信息栏 -->
   <div id="infoBar">
@@ -46,8 +46,8 @@
         <button class="btn-blue" id="btnMode">模式</button>
         <button class="btn-blue" id="btnDifficulty">难度</button>
         <button class="btn-blue" id="restartBtn">重新开局</button>
-        <span id="modeLabel" class="pc-only" style="color:#FFECB3;font-size:12px;">人机对战</span>
-        <select id="aiLevel" class="pc-only">
+        <span id="modeLabel" style="display:none;color:#FFECB3;font-size:12px;">人机对战</span>
+        <select id="aiLevel" style="display:none;">
           <option value="0">入门</option><option value="1">简单</option>
           <option value="2" selected>普通</option><option value="3">困难</option><option value="4">大师</option>
         </select>
