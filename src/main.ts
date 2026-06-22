@@ -83,6 +83,33 @@ class GomokuApp {
       this.controller.setAiLevel(this.panel.getAiLevel());
       this.restart();
     });
+    // 难度按钮 → 打开弹窗
+    const btnDifficulty = document.getElementById('btnDifficulty');
+    if (btnDifficulty) {
+      btnDifficulty.addEventListener('click', () => {
+        document.getElementById('difficultyModal')!.style.display = 'flex';
+      });
+    }
+    // 难度弹窗内5个选项
+    document.querySelectorAll('.btn-diff-select').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const level = parseInt((btn as HTMLElement).dataset.level || '2');
+        this.controller.setAiLevel(level);
+        (document.getElementById('aiLevel') as HTMLSelectElement).value = String(level);
+        // 更新modeLine
+        const modeLine = document.getElementById('modeLine');
+        const diffText = (btn as HTMLElement).textContent?.replace(/[🌟⭐👑\s]/g, '') || '普通';
+        if (modeLine) modeLine.textContent = `人机对战：(${diffText})`;
+        document.getElementById('difficultyModal')!.style.display = 'none';
+        this.restart();
+      });
+    });
+    document.getElementById('difficultyModalCancel')!.addEventListener('click', () => {
+      document.getElementById('difficultyModal')!.style.display = 'none';
+    });
+    document.getElementById('difficultyModalBg')!.addEventListener('click', () => {
+      document.getElementById('difficultyModal')!.style.display = 'none';
+    });
     document.getElementById('restartBtn')!.addEventListener('click', () => this.restart());
 
     // 再来一局弹窗

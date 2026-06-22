@@ -41,10 +41,16 @@
 
     <!-- 控制面板(Footer) -->
     <div class="control-footer" id="sidePanel">
-      <!-- 模式行 -->
+      <!-- 第一排：模式+难度+重开 -->
       <div class="c-row" id="rowMode">
         <button class="btn-blue" id="btnMode">模式</button>
+        <button class="btn-blue" id="btnDifficulty">难度</button>
+        <button class="btn-blue" id="restartBtn">重新开局</button>
         <span id="modeLabel" class="pc-only" style="color:#FFECB3;font-size:12px;">人机对战</span>
+        <select id="aiLevel" class="pc-only">
+          <option value="0">入门</option><option value="1">简单</option>
+          <option value="2" selected>普通</option><option value="3">困难</option><option value="4">大师</option>
+        </select>
       </div>
 
       <!-- 联机面板 -->
@@ -56,15 +62,8 @@
         <div id="roomInfo" style="font-size:11px;color:#FFECB3;"></div>
       </div>
 
-      <!-- AI面板 -->
-      <div class="c-row" id="aiPanel">
-        <span class="pc-only" style="font-size:12px;">难度</span>
-        <select id="aiLevel">
-          <option value="0">入门</option><option value="1">简单</option>
-          <option value="2" selected>普通</option><option value="3">困难</option><option value="4">大师</option>
-        </select>
-        <button class="btn-blue" id="restartBtn">重新开局</button>
-      </div>
+      <!-- AI面板容器（由JS控制显示/隐藏，PC端放难度select，手机端为空） -->
+      <div class="c-row" id="aiPanel"></div>
 
       <!-- 操作按钮 -->
       <div class="c-row" id="rowActions">
@@ -109,9 +108,23 @@
     <div id="roomInputModalTitle">输入房间号</div>
     <input id="roomInputModalField" type="number" min="1000" max="9999" placeholder="4位数字">
     <div style="display:flex;gap:8px;">
-      <button id="roomInputModalConfirm" class="btn-blue" style="width:80px;">加入</button>
+      <button id="roomInputModalConfirm" class="btn-mode-select" style="width:80px;">加入</button>
       <button id="roomInputModalCancel" class="btn-mode-cancel" style="width:80px;">取消</button>
     </div>
+  </div>
+</div>
+
+<!-- 难度选择弹窗 -->
+<div id="difficultyModal" style="display:none;">
+  <div id="difficultyModalBg"></div>
+  <div id="difficultyModalBox">
+    <div id="difficultyModalTitle">选择难度</div>
+    <button data-level="0" class="btn-diff-select">🌟 入门</button>
+    <button data-level="1" class="btn-diff-select">⭐ 简单</button>
+    <button data-level="2" class="btn-diff-select">⭐⭐ 普通</button>
+    <button data-level="3" class="btn-diff-select">⭐⭐⭐ 困难</button>
+    <button data-level="4" class="btn-diff-select">👑 大师</button>
+    <button id="difficultyModalCancel" class="btn-mode-cancel">取消</button>
   </div>
 </div>
 
