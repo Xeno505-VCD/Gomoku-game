@@ -206,6 +206,8 @@ export class Panel {
 
   updateRoomInfo(text: string): void {
     this.roomInfoEl.textContent = text;
+    const row = document.getElementById('roomInfoRow');
+    if (row) row.style.display = text ? '' : 'none';
   }
 
   // ==================== 按钮状态 ====================
