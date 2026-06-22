@@ -196,7 +196,7 @@ body {
     width: auto !important;
     height: auto !important;
     max-width: 90vw;
-    max-height: 60vh;
+    max-height: 50vh;
     aspect-ratio: 1 / 1;
     margin: 0 auto;
     border-radius: 8px;
@@ -213,7 +213,7 @@ body {
     gap: 0;
     min-width: auto;
     padding: 0;
-    margin-top: -6px;
+    margin-top: 0;
     width: 100%;
   }
 
@@ -222,10 +222,10 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     width: 100%;
     max-width: 90vw;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
 
   #sidePanel button { width: 72px; font-size: 12px; padding: 8px 0; }
