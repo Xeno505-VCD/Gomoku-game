@@ -110,6 +110,14 @@ class GomokuApp {
     document.getElementById('difficultyModalBg')!.addEventListener('click', () => {
       document.getElementById('difficultyModal')!.style.display = 'none';
     });
+    // 房间号展示弹窗关闭
+    document.getElementById('roomShowModalClose')!.addEventListener('click', () => {
+      document.getElementById('roomShowModal')!.style.display = 'none';
+    });
+    document.getElementById('roomShowModalBg')!.addEventListener('click', () => {
+      document.getElementById('roomShowModal')!.style.display = 'none';
+    });
+
     document.getElementById('restartBtn')!.addEventListener('click', () => this.restart());
 
     // 再来一局弹窗
@@ -393,6 +401,11 @@ class GomokuApp {
   private createRoom(): void {
     const roomId = this.online.createRoom();
     this.panel.updateRoomInfo('房间号: ' + roomId);
+    // 弹出房间号展示弹窗
+    const showModal = document.getElementById('roomShowModal')!;
+    const showNumber = document.getElementById('roomShowNumber')!;
+    showNumber.textContent = roomId;
+    showModal.style.display = 'flex';
     this.onlineActive = true;
     this.controller.setMode(GameMode.ONLINE);
     this.controller.reset();
