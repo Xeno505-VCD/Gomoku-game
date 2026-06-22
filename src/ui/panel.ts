@@ -149,11 +149,15 @@ export class Panel {
     const btnJoinRoom = document.getElementById('btnJoinRoom');
 
     if (mode === GameMode.ONLINE) {
-      // 联机：显示房间面板，隐藏难度按钮、隐藏单独的加入按钮（弹窗里有）
+      // 联机：显示房间面板，隐藏难度/模式/重开按钮
       this.onlinePanelEl.style.display = 'flex';
       this.aiPanelEl.style.display = 'none';
       if (btnDifficulty) btnDifficulty.style.display = 'none';
       if (btnJoinRoom) btnJoinRoom.style.display = 'none';
+      const restartBtn = document.getElementById('restartBtn');
+      const btnMode = document.getElementById('btnMode');
+      if (restartBtn) restartBtn.style.display = 'none';
+      if (btnMode) btnMode.style.display = 'none';
       this.modeLabelEl.textContent = '联机对战';
       if (modeLine) modeLine.textContent = '联机对战';
     } else if (mode === GameMode.AI) {
