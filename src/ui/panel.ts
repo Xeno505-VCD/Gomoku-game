@@ -145,21 +145,33 @@ export class Panel {
   showModeUI(mode: GameMode): void {
     this.hideModeModal();
     const modeLine = document.getElementById('modeLine');
+    const btnDifficulty = document.getElementById('btnDifficulty');
+    const btnJoinRoom = document.getElementById('btnJoinRoom');
+
     if (mode === GameMode.ONLINE) {
+      // 联机：显示房间面板，隐藏难度按钮、隐藏单独的加入按钮（弹窗里有）
       this.onlinePanelEl.style.display = 'flex';
       this.aiPanelEl.style.display = 'none';
+      if (btnDifficulty) btnDifficulty.style.display = 'none';
+      if (btnJoinRoom) btnJoinRoom.style.display = 'none';
       this.modeLabelEl.textContent = '联机对战';
       if (modeLine) modeLine.textContent = '联机对战';
     } else if (mode === GameMode.AI) {
+      // 人机：显示难度按钮
       this.onlinePanelEl.style.display = 'none';
       this.aiPanelEl.style.display = 'block';
+      if (btnDifficulty) btnDifficulty.style.display = '';
+      if (btnJoinRoom) btnJoinRoom.style.display = '';
       this.modeLabelEl.textContent = '人机对战';
       this.aiLevelSelect.style.display = '';
       const diff = this.aiLevelSelect.options[this.aiLevelSelect.selectedIndex]?.text || '普通';
       if (modeLine) modeLine.textContent = `人机对战：(${diff})`;
     } else {
+      // 双人：隐藏难度按钮
       this.onlinePanelEl.style.display = 'none';
       this.aiPanelEl.style.display = 'block';
+      if (btnDifficulty) btnDifficulty.style.display = 'none';
+      if (btnJoinRoom) btnJoinRoom.style.display = '';
       this.modeLabelEl.textContent = '双人对战';
       this.aiLevelSelect.style.display = 'none';
       if (modeLine) modeLine.textContent = '双人对战';
