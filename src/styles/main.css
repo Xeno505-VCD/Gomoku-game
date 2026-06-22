@@ -9,10 +9,7 @@ body {
   font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
 }
 
-/* PC默认 */
-.mobile-only { display: none; }
-.pc-only { display: inline; }
-
+/* ==================== 全局容器 ==================== */
 .app-container {
   display: flex;
   flex-direction: column;
@@ -145,16 +142,12 @@ body {
 #sidePanel button:disabled { background-color: #9E9E9E !important; color: #616161 !important; cursor: not-allowed; opacity: 0.7; }
 #sidePanel select { padding: 4px 8px; border-radius: 4px; background: #5D4037; color: #FFECB3; border: 1px solid #8D6E63; font-size: 13px; width: 120px; }
 
-.room-input-pc { display: none; }
-#onlinePanel input { width: 120px; padding: 4px; border-radius: 4px; border: 1px solid #8D6E63; background: #5D4037; color: #FFECB3; font-size: 13px; }
 #feedbackSection textarea { width: 120px; padding: 4px; border-radius: 4px; border: 1px solid #8D6E63; background: #5D4037; color: #FFECB3; font-size: 11px; font-family: inherit; resize: none; }
 #timerBar { color: #FFD700; font-weight: bold; font-size: 13px; }
 
 /* ==================== 手机端 ==================== */
 @media (max-width: 600px) {
   html, body { height: 100%; overflow: hidden; background-color: #2E1A0E; }
-  .mobile-only { display: block; }
-  .pc-only { display: none !important; }
 
   .app-container {
     min-height: 100vh;
